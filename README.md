@@ -25,13 +25,17 @@ pytest -q                                   # 331 tests
 
 **No API keys. No network.** That is the point — see below.
 
+Deploying it? **[`docs/DEPLOY.md`](docs/DEPLOY.md)** — push to GitHub, import to Vercel,
+done. It runs on fixtures with no environment variables; real AI is one variable away.
+
 Presenting it? **[`docs/DEMO.md`](docs/DEMO.md)** is a scripted three-minute walkthrough:
 pre-flight checks, minute-by-minute with the exact buttons and figures, what to do when
 something breaks on stage, and honest answers to the questions judges ask.
 
 | Route | |
 |---|---|
-| `GET /` | the assistant (WhatsApp-style chat) |
+| `GET /` | the landing page |
+| `GET /app` | the assistant (WhatsApp-style chat) |
 | `GET /visualizer` | standalone debt-trap visualizer |
 | `GET /health` | adapter status |
 | `GET /corpus/status` | retrieval backend and corpus provenance |
@@ -152,6 +156,7 @@ backend/
   corpus/               seeded legal chunks
 fixtures/               canned transcripts, parses, audio for DEMO_MODE
 frontend/
+  home.html             the landing page
   index.html            the chat app
   visualizer.html       standalone debt-trap visualizer
   luminous.css          design tokens, shared
@@ -375,6 +380,27 @@ The letter separates what it asserts from what it asks:
 
 Every blank is a self-describing `[BRACKETED INSTRUCTION]`, and `placeholders` enumerates them
 for the UI — that is the F6 acceptance criterion about no unlabelled placeholder.
+
+---
+
+## Running it hosted
+
+The app deploys to Vercel as one Python serverless function — see
+[`docs/DEPLOY.md`](docs/DEPLOY.md). Three things differ from local, and each is
+handled rather than hoped about:
+
+| Serverless reality | What the app does |
+|---|---|
+| No system speech voices on Linux | Returns the script with **no audio** and the provider `mock-unavailable`; the page speaks it with the Web Speech API. Marathi and Bhojpuri fall back to a Hindi voice, which reads Devanagari. |
+| No shared memory between invocations | The browser holds the conversation and passes facts explicitly. Every route already worked statelessly; the UI now relies on that rather than on a session surviving a cold start. |
+| A 4.5 MB response cap | No audio crosses the wire, so the largest response is 39 KB. |
+
+That middle row replaced a silent WAV that was wrong twice over: it looked like
+a real voice note to the UI, and a hundred-second script is ~6 MB of base64 —
+which the platform would have rejected outright.
+
+`tests/test_serverless.py` holds all three in place, including a test that
+fails if any language loses its speech fallback.
 
 ---
 

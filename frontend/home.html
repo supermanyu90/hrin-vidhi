@@ -91,10 +91,21 @@
   .lang-label {
     font-size: 15px; color: var(--paper-dim); margin-bottom: 10px; font-weight: 600;
   }
-  .langs { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 30px; }
+  /* Six languages in an even 3x2 on a phone. Left to wrap freely they land
+     3/2/1, which strands one language on its own row and pushes the
+     microphone further down the screen. */
+  .langs {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 9px; margin-bottom: 28px;
+  }
+  @media (min-width: 560px) {
+    .langs { display: flex; flex-wrap: wrap; }
+    .lang { padding: 11px 20px; }
+  }
   .lang {
     font-family: var(--ui); font-weight: 800; font-size: 19px;
-    padding: 11px 20px; border-radius: 14px; cursor: pointer;
+    padding: 11px 14px; border-radius: 14px; cursor: pointer;
+    min-height: 52px;
     background: transparent; color: var(--paper);
     border: 2.5px solid var(--ink-3);
     transition: transform .12s, background .16s, border-color .16s;
