@@ -262,3 +262,87 @@ def test_redaction_leaves_ordinary_numbers_alone() -> None:
     assert redact("principal 80000 at 12 percent over 24 months") == (
         "principal 80000 at 12 percent over 24 months"
     )
+
+
+# ---------------------------------------------------------------------------
+# Provider choice — Anthropic and Google are interchangeable
+# ---------------------------------------------------------------------------
+
+
+def test_google_key_alone_activates_vision_and_prose() -> None:
+    """The whole point of the adapter layer: one key, no code change."""
+    settings = Settings(demo_mode=False, google_api_key="g-x")
+    adapters, _ = build_adapters(settings)
+    assert adapters.docparser.provider == "gemini"
+    assert adapters.llm.provider == "gemini"
+
+
+def test_either_provider_alone_is_a_complete_answer() -> None:
+    for key, expected in (("anthropic_api_key", "anthropic"), ("google_api_key", "gemini")):
+        adapters, _ = build_adapters(Settings(demo_mode=False, **{key: "x"}))
+        assert adapters.docparser.provider == expected
+        assert adapters.llm.provider == expected
+
+
+def test_a_named_provider_beats_auto_selection() -> None:
+    """With both keys set, the operator still decides."""
+    settings = Settings(
+        demo_mode=False,
+        anthropic_api_key="a-x",
+        google_api_key="g-x",
+        docparser_provider="gemini",
+        llm_provider="gemini",
+    )
+    adapters, _ = build_adapters(settings)
+    assert adapters.docparser.provider == "gemini"
+    assert adapters.llm.provider == "gemini"
+
+
+def test_providers_can_be_mixed() -> None:
+    """Gemini for vision, Claude for prose, or the other way round."""
+    settings = Settings(
+        demo_mode=False,
+        anthropic_api_key="a-x",
+        google_api_key="g-x",
+        docparser_provider="gemini",
+        llm_provider="anthropic",
+    )
+    adapters, _ = build_adapters(settings)
+    assert adapters.docparser.provider == "gemini"
+    assert adapters.llm.provider == "anthropic"
+
+
+def test_gemini_without_its_key_fails_loudly() -> None:
+    settings = Settings(demo_mode=False, docparser_provider="gemini", google_api_key=None)
+    with pytest.raises(AdapterError, match="GOOGLE_API_KEY"):
+        build_adapters(settings)
+
+
+def test_demo_mode_ignores_a_google_key_too() -> None:
+    adapters, _ = build_adapters(Settings(demo_mode=True, google_api_key="g-x"))
+    assert adapters.all_mock
+
+
+def test_both_vision_providers_are_held_to_the_same_contract() -> None:
+    """A shared prompt is what keeps one fixture valid for both providers."""
+    import inspect
+
+    from backend.adapters.docparser import VISION_SYSTEM_PROMPT
+    from backend.adapters.gemini import GeminiDocumentParser
+
+    source = inspect.getsource(GeminiDocumentParser)
+    assert "VISION_SYSTEM_PROMPT" in source, "Gemini must not carry its own prompt"
+    assert "NEVER guess" in VISION_SYSTEM_PROMPT
+
+
+def test_gemini_reports_a_missing_package_as_recoverable_config() -> None:
+    """`google-genai` is optional, so its absence degrades to the mock."""
+    from backend.adapters.gemini import _client
+
+    try:
+        import google.genai  # noqa: F401
+    except ImportError:
+        with pytest.raises(AdapterError, match="google-genai"):
+            _client("g-x")
+    else:
+        pytest.skip("google-genai is installed in this environment")

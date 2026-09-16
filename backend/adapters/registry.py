@@ -29,6 +29,7 @@ from backend.adapters.base import (
     Translator,
 )
 from backend.adapters.docparser import AnthropicDocumentParser, MockDocumentParser
+from backend.adapters.gemini import GeminiDocumentParser, GeminiLLM
 from backend.adapters.llm import AnthropicLLM, MockLLM
 from backend.adapters.stt import BhashiniSpeechToText, MockSpeechToText, SarvamSpeechToText
 from backend.adapters.translate import MockTranslator, SarvamTranslator
@@ -145,18 +146,20 @@ def build_adapters(settings: Settings | None = None) -> tuple[AdapterSet, list[s
             "docparser",
             settings.docparser_provider,
             settings,
-            {"anthropic": AnthropicDocumentParser},
+            {"anthropic": AnthropicDocumentParser, "gemini": GeminiDocumentParser},
             MockDocumentParser,
-            ["anthropic"],
+            # Anthropic first only because it was implemented first; either is
+            # a complete answer, and naming a provider explicitly overrides this.
+            ["anthropic", "gemini"],
             warnings,
         ),
         llm=_resolve(
             "llm",
             settings.llm_provider,
             settings,
-            {"anthropic": AnthropicLLM},
+            {"anthropic": AnthropicLLM, "gemini": GeminiLLM},
             MockLLM,
-            ["anthropic"],
+            ["anthropic", "gemini"],
             warnings,
         ),
     )

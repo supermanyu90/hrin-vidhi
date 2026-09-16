@@ -20,7 +20,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
 DEMO_MODE=true python -m backend.main      # → http://127.0.0.1:8000
-pytest -q                                   # 331 tests
+pytest -q                                   # 339 tests
 ```
 
 **No API keys. No network.** That is the point — see below.
@@ -87,9 +87,24 @@ run a live document parser against mocked speech:
 ```bash
 DEMO_MODE=false
 ANTHROPIC_API_KEY=sk-ant-...     # docparser (F2) + prose tightening (F6)
+GOOGLE_API_KEY=...               # the same two jobs on Gemini instead
 SARVAM_API_KEY=...               # stt, translate, tts
-BHASHINI_API_KEY=... BHASHINI_USER_ID=...   # alternative Indic speech stack
+BHASHINI_API_KEY=... BHASHINI_USER_ID=...   # STT only — see the note below
 ```
+
+**Anthropic and Google are interchangeable.** They cover exactly the same two
+capabilities, share the same extraction prompt, and return the same typed
+`DocumentExtraction`, so one key is a complete answer:
+
+| Keys set | docparser | llm |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | anthropic | anthropic |
+| `GOOGLE_API_KEY` | gemini | gemini |
+| both, `auto` | anthropic | anthropic |
+| both, `DOCPARSER_PROVIDER=gemini` | gemini | anthropic |
+
+Mixing is fine — Gemini for vision and Claude for prose, or the reverse.
+Install only the SDK you use: `anthropic`, or `google-genai`.
 
 Resolution order per capability:
 
@@ -427,4 +442,4 @@ fails if any language loses its speech fallback.
 | 6 | F4 rights explainer (TTS) + F6 grievance drafter | done |
 | 7 | `docs/DEMO.md` — scripted 3-minute judge walkthrough | done |
 
-331 tests passing; the full flow completes in `DEMO_MODE` with no keys set.
+339 tests passing; the full flow completes in `DEMO_MODE` with no keys set.

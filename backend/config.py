@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     #: Depth/cost dial for the Anthropic adapters. `temperature` is rejected on
     #: Opus 5, so effort is the knob we expose instead.
     anthropic_effort: str = "medium"
+    # Google — an alternative to Anthropic for vision and prose.
+    google_api_key: str | None = None
+    google_model: str = "gemini-3.8-flash"
+
     bhashini_api_key: str | None = None
     bhashini_user_id: str | None = None
     sarvam_api_key: str | None = None
@@ -93,6 +97,10 @@ class Settings(BaseSettings):
     @property
     def has_anthropic(self) -> bool:
         return bool(self.anthropic_api_key)
+
+    @property
+    def has_google(self) -> bool:
+        return bool(self.google_api_key)
 
     @property
     def has_bhashini(self) -> bool:

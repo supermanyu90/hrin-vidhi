@@ -38,13 +38,22 @@ changes.
 |---|---|
 | `DEMO_MODE` = `false` | Stop forcing mocks; adapters resolve per the keys below. |
 | `ANTHROPIC_API_KEY` | Real Claude vision on photographed loan papers (F2), and prose tightening on the letter (F6). |
+| `GOOGLE_API_KEY` | The same two jobs on Gemini instead. Either provider alone is enough — see the note below. |
 | `SARVAM_API_KEY` | Real Indic speech-to-text, translation and text-to-speech. |
 
 Each capability resolves independently, so one key is enough to upgrade one
 stage. A missing key or a failed call degrades that stage to its mock and says
 so in `/health`'s `warnings`, rather than breaking the page.
 
-**Check what is live** at `https://<your-app>.vercel.app/health`.
+**Anthropic or Google, not both.** The two cover identical ground and share
+the same extraction prompt, so pick whichever you have credit on and add only
+that SDK to `requirements.txt` — `anthropic` or `google-genai`. Adding both
+works and lets you mix them (`DOCPARSER_PROVIDER=gemini`,
+`LLM_PROVIDER=anthropic`), but it is two dependencies in the function bundle
+for no gain.
+
+**Check what is live** at `https://<your-app>.vercel.app/health` — it names
+the active provider for each of the five capabilities.
 
 ---
 

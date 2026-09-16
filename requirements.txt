@@ -13,6 +13,8 @@ httpx==0.28.1                 # FastAPI TestClient transport
 
 # --- Optional, for going live. None is needed for the demo. -----------------
 # anthropic>=0.69             # vision document parser (F2) + prose tightening (F6)
+# google-genai>=2.23          # the same two jobs on Gemini instead. Either
+#                             # provider alone is enough; install only what you use.
 # sentence-transformers       # swaps BM25 retrieval for all-MiniLM-L6-v2.
 #                             # NOTE: downloads model weights on first use, so
 #                             # the demo default stays BM25 — see README.
