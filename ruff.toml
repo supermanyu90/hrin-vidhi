@@ -1,0 +1,10 @@
+# Lint config. Selected rules are the ones that catch real defects; the two
+# ignores below are deliberate and explained at each site.
+line-length = 100
+
+[lint]
+select = ["F", "E", "W", "B", "UP", "SIM", "BLE", "RUF100", "I"]
+ignore = [
+  "E501",   # long lines: the corpus and phrasebook carry long prose strings
+  "B008",   # FastAPI's Depends/File/Form/Body in defaults IS the framework idiom
+]

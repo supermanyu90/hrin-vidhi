@@ -1,0 +1,69 @@
+{
+  "source_name": "RBI Fair Practices Code (lenders and recovery agents)",
+  "source_note": "PLAIN-LANGUAGE SUMMARIES, NOT STATUTORY TEXT. These chunks paraphrase the borrower-protection expectations RBI places on regulated lenders and the recovery agents acting for them, drawn from the Fair Practices Code that RBI requires NBFCs and banks to adopt and from RBI's directions on the engagement of recovery agents. Section and paragraph numbers have deliberately been left out where we are not certain of them; the `citation` field carries a descriptive locator instead. A qualified reviewer should replace each `text` with vetted wording and set `verified_by` and `last_reviewed`.",
+  "chunks": [
+    {
+      "chunk_id": "rbi-fpc-recovery-hours",
+      "title": "Recovery agents may only contact a borrower between 8 a.m. and 7 p.m.",
+      "source": "RBI Fair Practices Code / RBI directions on engagement of recovery agents",
+      "citation": "RBI Fair Practices Code — conduct of recovery agents, permitted contact hours",
+      "text": "A lender and any recovery agent acting for it must not contact a borrower before 8:00 in the morning or after 7:00 in the evening. Calls, visits and messages outside these hours are not permitted, whatever the borrower owes. The restriction applies to the lender's own staff and to any agency it has engaged; the lender stays responsible for how its agents behave.",
+      "topics": ["recovery", "harassment", "calling hours", "agent conduct", "night calls", "early morning"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "rbi-fpc-no-harassment",
+      "title": "Recovery must not involve intimidation, threats or humiliation",
+      "source": "RBI Fair Practices Code / RBI directions on engagement of recovery agents",
+      "citation": "RBI Fair Practices Code — recovery shall not involve harassment or intimidation",
+      "text": "A lender must not resort to harassment in recovering a loan. This covers persistently bothering the borrower at odd hours, using threats, using abusive or obscene language, using muscle power, and publicly humiliating or shaming the borrower. Recovery agents must be trained to deal with borrowers with civility. A borrower who is behind on payments is still entitled to be treated decently.",
+      "topics": ["harassment", "threats", "intimidation", "abuse", "public shaming", "violence", "agent conduct"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "rbi-fpc-third-party-contact",
+      "title": "Shaming a borrower to family, neighbours or employer is not permitted",
+      "source": "RBI Fair Practices Code / RBI directions on engagement of recovery agents",
+      "citation": "RBI Fair Practices Code — privacy of the borrower and contact with third parties",
+      "text": "A lender or its recovery agent must not contact the borrower's relatives, friends, neighbours, colleagues or employer in order to pressure the borrower or to expose the debt. The debt is a matter between the lender and the borrower. Telling a borrower's in-laws about a default, announcing it in the borrower's village, or contacting people from the borrower's phone contacts to shame them, all fall outside what is permitted.",
+      "topics": ["family", "relatives", "neighbours", "employer", "privacy", "public shaming", "contact list", "in-laws"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "rbi-fpc-agent-identification",
+      "title": "A borrower may demand to know who the recovery agent is",
+      "source": "RBI Fair Practices Code / RBI directions on engagement of recovery agents",
+      "citation": "RBI Fair Practices Code — notice of the agency engaged and agent identity",
+      "text": "When a lender hands a loan account to a recovery agency, it is expected to tell the borrower which agency has been engaged. The agent should identify themselves and be able to show authority from the lender. A borrower is entitled to ask who is calling, which agency they represent, and on whose behalf, and to refuse to deal with someone who will not say.",
+      "topics": ["recovery agent", "identification", "authorisation", "which agency"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "rbi-fpc-possession-due-process",
+      "title": "Seizing a financed vehicle or asset requires the contract terms and due process",
+      "source": "RBI Fair Practices Code",
+      "citation": "RBI Fair Practices Code — repossession clause to be in the loan agreement, and its terms",
+      "text": "If a lender intends to be able to repossess a financed asset such as a two-wheeler, the loan agreement must contain a repossession clause that is legally enforceable, and the agreement terms must be transparent about notice before repossession, the circumstances in which it may happen, how the borrower may get the asset back, and how it would be sold. Agents cannot simply take a vehicle on the spot because a payment is late, and cannot enter or seize property by force.",
+      "topics": ["repossession", "seizure", "vehicle", "two-wheeler", "notice", "due process", "forcible entry"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "rbi-fpc-grievance-redressal",
+      "title": "Every lender must run a grievance redressal mechanism with a named officer",
+      "source": "RBI Fair Practices Code",
+      "citation": "RBI Fair Practices Code — grievance redressal mechanism",
+      "text": "Every regulated lender must have a grievance redressal mechanism and must display the name and contact details of the officer who handles complaints, often called the Nodal Officer or Grievance Redressal Officer, at its branches and on its website. A borrower's complaint should go to this officer first. If it is not resolved within the period the lender allows, the borrower can escalate to the RBI Ombudsman.",
+      "topics": ["grievance", "nodal officer", "complaint", "escalation", "redressal", "who to write to"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "rbi-fpc-nbfc-registration",
+      "title": "Only an RBI-registered NBFC may carry on lending as an NBFC",
+      "source": "RBI registration requirements for NBFCs",
+      "citation": "RBI — requirement of a Certificate of Registration for NBFC business; RBI's public list of registered NBFCs",
+      "text": "A company carrying on the business of a non-banking financial company generally must hold a Certificate of Registration from the Reserve Bank of India. RBI publishes a list of registered NBFCs on its website, and a borrower can check whether a lender appears on it. If a lender shows no registration number and does not appear on RBI's list, that is a serious warning sign, and RBI's protections that apply to regulated lenders may be harder to invoke against it. An unregistered lender is not thereby allowed to harass anyone; other law still applies.",
+      "topics": ["NBFC", "registration", "certificate of registration", "unregistered lender", "verify lender", "RBI list"],
+      "is_summary": true
+    }
+  ]
+}

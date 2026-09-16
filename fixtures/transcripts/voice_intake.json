@@ -1,0 +1,48 @@
+{
+  "_comment": [
+    "Canned STT output for DEMO_MODE, keyed by language code.",
+    "All five tell the SAME borrower story (see docs/DEMO.md): Ramesh Kumbhar,",
+    "Latur, Maharashtra — Rs 80,000 two-wheeler loan from 'Sahyadri Finserv'",
+    "quoted at 'only 12%' flat over 24 months. A recovery agent called at 06:30,",
+    "threatened to tell his wife's family and shame him in the village, and a",
+    "private agency posted him a paper headed 'COURT NOTICE'.",
+    "The story is fictional. 'Sahyadri Finserv' is an invented lender name and",
+    "is not a claim about any real company."
+  ],
+  "hi": {
+    "native_text": "नमस्ते, मेरा नाम रमेश कुंभार है। मैं लातूर का रहने वाला हूँ। पिछले साल मैंने दोपहिया गाड़ी के लिए सह्याद्रि फिनसर्व से अस्सी हज़ार रुपये का कर्ज़ लिया था। उन्होंने कहा था कि सिर्फ़ बारह प्रतिशत ब्याज लगेगा, दो साल में चुका देना। लेकिन किस्त बहुत ज़्यादा लग रही है और जो कागज़ मिला उसमें फीस भी लिखी नहीं थी। कल सुबह साढ़े छह बजे वसूली एजेंट ने फ़ोन किया और कहा कि वह मेरी ससुराल वालों को बताएगा और गाँव आकर सबके सामने बेइज़्ज़त करेगा। उन्होंने एक कागज़ भी भेजा है जिस पर कोर्ट नोटिस लिखा है। मुझे समझ नहीं आ रहा कि मैं क्या करूँ।",
+    "english_text": "Hello, my name is Ramesh Kumbhar. I live in Latur. Last year I took a loan of eighty thousand rupees from Sahyadri Finserv for a two-wheeler. They told me it would be only twelve percent interest, to be repaid in two years. But the instalment feels very high, and the paper I was given did not mention any fees. Yesterday morning at six thirty the recovery agent called and said he would tell my wife's family and come to my village and shame me in front of everyone. They have also sent a paper with 'Court Notice' written on it. I do not understand what I should do.",
+    "confidence": 0.94,
+    "duration_seconds": 41.0
+  },
+  "mr": {
+    "native_text": "नमस्कार, माझं नाव रमेश कुंभार. मी लातूरचा आहे. गेल्या वर्षी मी दुचाकीसाठी सह्याद्री फिनसर्व्हकडून ऐंशी हजार रुपयांचं कर्ज घेतलं होतं. त्यांनी सांगितलं होतं की फक्त बारा टक्के व्याज लागेल, दोन वर्षांत फेडायचं. पण हप्ता खूपच जास्त वाटतोय, आणि जो कागद दिला त्यात कुठलीही फी लिहिलेली नव्हती. काल सकाळी साडेसहा वाजता वसुली एजंटने फोन केला आणि म्हणाला की तो माझ्या सासरच्या लोकांना सांगेल आणि गावात येऊन सगळ्यांसमोर माझी बेइज्जती करेल. त्यांनी एक कागद पण पाठवला आहे ज्यावर कोर्ट नोटीस असं लिहिलं आहे. मला काय करावं तेच कळत नाही.",
+    "english_text": "Hello, my name is Ramesh Kumbhar. I am from Latur. Last year I took a loan of eighty thousand rupees from Sahyadri Finserv for a two-wheeler. They told me it would be only twelve percent interest, to be repaid in two years. But the instalment feels far too high, and the paper they gave me did not list any fee. Yesterday morning at six thirty the recovery agent called and said he would tell my wife's family and come to my village and humiliate me in front of everyone. They have also sent a paper with 'Court Notice' written on it. I simply do not know what to do.",
+    "confidence": 0.91,
+    "duration_seconds": 43.0
+  },
+  "ta": {
+    "native_text": "வணக்கம், என் பெயர் ரமேஷ் கும்பார். நான் லாத்தூரைச் சேர்ந்தவன். போன வருடம் இருசக்கர வாகனத்திற்காக சஹ்யாத்ரி ஃபின்சர்வ் நிறுவனத்திடம் எண்பதாயிரம் ரூபாய் கடன் வாங்கினேன். பன்னிரண்டு சதவீதம் வட்டி மட்டும்தான், இரண்டு வருடத்தில் கட்டிவிடலாம் என்று சொன்னார்கள். ஆனால் தவணைத் தொகை மிக அதிகமாக இருக்கிறது, கொடுத்த காகிதத்தில் எந்தக் கட்டணமும் எழுதப்படவில்லை. நேற்று காலை ஆறரை மணிக்கு வசூல் முகவர் அழைத்து, என் மனைவியின் வீட்டாரிடம் சொல்லுவேன், ஊருக்கு வந்து எல்லார் முன்னிலையிலும் அவமானப்படுத்துவேன் என்று மிரட்டினார். நீதிமன்ற நோட்டீஸ் என்று எழுதிய ஒரு காகிதத்தையும் அனுப்பியிருக்கிறார்கள். நான் என்ன செய்வது என்று தெரியவில்லை.",
+    "english_text": "Greetings, my name is Ramesh Kumbhar. I am from Latur. Last year I took a loan of eighty thousand rupees from Sahyadri Finserv for a two-wheeler. They said it would be only twelve percent interest and could be repaid in two years. But the instalment is very high, and no charge was written on the paper they gave me. Yesterday morning at six thirty the recovery agent called and threatened that he would tell my wife's family and come to my town and humiliate me in front of everyone. They have also sent a paper with 'Court Notice' written on it. I do not know what to do.",
+    "confidence": 0.89,
+    "duration_seconds": 45.0
+  },
+  "te": {
+    "native_text": "నమస్కారం, నా పేరు రమేష్ కుంభార్. నేను లాతూర్‌కు చెందినవాడిని. గత సంవత్సరం ద్విచక్ర వాహనం కోసం సహ్యాద్రి ఫిన్‌సర్వ్ నుండి ఎనభై వేల రూపాయల రుణం తీసుకున్నాను. పన్నెండు శాతం వడ్డీ మాత్రమే, రెండేళ్లలో కట్టేయవచ్చు అని చెప్పారు. కానీ వాయిదా చాలా ఎక్కువగా ఉంది, ఇచ్చిన కాగితంలో ఎలాంటి ఫీజు కూడా రాయలేదు. నిన్న ఉదయం ఆరున్నర గంటలకు వసూలు ఏజెంట్ ఫోన్ చేసి, మా ఆవిడ పుట్టింటి వాళ్లకు చెప్తానని, ఊరికి వచ్చి అందరి ముందు అవమానిస్తానని బెదిరించాడు. కోర్టు నోటీసు అని రాసిన ఒక కాగితం కూడా పంపారు. నేను ఏం చేయాలో అర్థం కావట్లేదు.",
+    "english_text": "Greetings, my name is Ramesh Kumbhar. I am from Latur. Last year I took a loan of eighty thousand rupees from Sahyadri Finserv for a two-wheeler. They said it would be only twelve percent interest and could be repaid in two years. But the instalment is very high, and no fee was written on the paper they gave me. Yesterday morning at six thirty the recovery agent called and threatened to tell my wife's parents and to come to my village and humiliate me in front of everyone. They have also sent a paper with 'Court Notice' written on it. I cannot understand what I should do.",
+    "confidence": 0.9,
+    "duration_seconds": 44.0
+  },
+  "bho": {
+    "native_text": "परनाम, हमार नाम रमेश कुंभार बा। हम लातूर के रहे वाला हईं। पिछला साल हम दुपहिया खातिर सह्याद्रि फिनसर्व से अस्सी हजार रुपिया करजा लेले रहनी। ऊ लोग कहले रहे कि खाली बारह परसेंट बियाज लागी, दू साल में चुका देब। बाकिर किस्त बहुते जादा लागत बा, आ जवन कागज मिलल ओकरा में कवनो फीस लिखल ना रहे। काल्ह भोरे साढ़े छव बजे वसूली एजेंट फोन कइलस आ कहलस कि ऊ हमार ससुरार वाला के बताई आ गाँव आके सबके सामने बेइज्जत करी। एगो कागज भी भेजले बा जेकरा पर कोर्ट नोटिस लिखल बा। हमरा समझ में ना आवत बा कि का करीं।",
+    "english_text": "Greetings, my name is Ramesh Kumbhar. I live in Latur. Last year I took a loan of eighty thousand rupees from Sahyadri Finserv for a two-wheeler. They said only twelve percent interest would apply and it could be repaid in two years. But the instalment feels far too high, and the paper I received did not mention any fee. Yesterday morning at half past six the recovery agent called and said he would tell my wife's family and come to the village and shame me in front of everyone. They have also sent a paper with 'Court Notice' written on it. I cannot make out what I should do.",
+    "confidence": 0.82,
+    "duration_seconds": 42.0
+  },
+  "en": {
+    "native_text": "Hello, my name is Ramesh Kumbhar. I am from Latur. Last year I took a loan of eighty thousand rupees from Sahyadri Finserv for a two-wheeler. They told me it was only twelve percent interest, repayable over two years. But the instalment feels far too high, and the paper they gave me did not list any fee. Yesterday morning at six thirty the recovery agent called and said he would tell my wife's family and come to my village and shame me in front of everyone. They have also sent a paper with 'Court Notice' written on it. I do not know what to do.",
+    "english_text": "Hello, my name is Ramesh Kumbhar. I am from Latur. Last year I took a loan of eighty thousand rupees from Sahyadri Finserv for a two-wheeler. They told me it was only twelve percent interest, repayable over two years. But the instalment feels far too high, and the paper they gave me did not list any fee. Yesterday morning at six thirty the recovery agent called and said he would tell my wife's family and come to my village and shame me in front of everyone. They have also sent a paper with 'Court Notice' written on it. I do not know what to do.",
+    "confidence": 0.97,
+    "duration_seconds": 38.0
+  }
+}

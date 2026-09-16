@@ -1,0 +1,51 @@
+{
+  "source_name": "Consumer Protection Act, 2019",
+  "source_note": "PLAIN-LANGUAGE SUMMARIES, NOT STATUTORY TEXT. These chunks paraphrase the parts of the Consumer Protection Act, 2019 that a borrower complaining about a lender's conduct is most likely to rely on. Section numbers are given only for 'unfair trade practice' and 'consumer rights', where we are confident; everywhere else the `citation` is a descriptive locator. Whether a particular lending arrangement is a 'service' within the Act, and which forum has jurisdiction, are questions for a lawyer. A qualified reviewer should replace each `text` with vetted wording and set `verified_by` and `last_reviewed`.",
+  "chunks": [
+    {
+      "chunk_id": "cpa-unfair-trade-practice",
+      "title": "Misleading a borrower about price or terms is an unfair trade practice",
+      "source": "Consumer Protection Act, 2019",
+      "citation": "Consumer Protection Act, 2019, Section 2(47) — definition of 'unfair trade practice'",
+      "text": "The Act treats a practice that adopts deceptive methods to promote a service — including making a false or misleading statement about the price at which a service is provided — as an unfair trade practice. Advertising a loan at a low headline rate while the real annual cost is far higher, or failing to disclose charges that are in fact levied, can fall within this.",
+      "topics": ["unfair trade practice", "misleading", "false statement", "price", "advertised rate", "deceptive"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "cpa-consumer-rights",
+      "title": "A consumer has a right to be informed and a right to be heard",
+      "source": "Consumer Protection Act, 2019",
+      "citation": "Consumer Protection Act, 2019, Section 2(9) — rights of consumers",
+      "text": "The Act sets out consumer rights that include the right to be informed about the quality, quantity, standard and price of goods or services so as to be protected against unfair trade practices, the right to be heard and to be assured that consumer interests will receive due consideration, and the right to seek redress against unfair or restrictive trade practices.",
+      "topics": ["consumer rights", "right to be informed", "right to be heard", "redress"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "cpa-deficiency-in-service",
+      "title": "A shortfall in the service a lender promised can be a deficiency in service",
+      "source": "Consumer Protection Act, 2019",
+      "citation": "Consumer Protection Act, 2019 — 'deficiency' in relation to a service",
+      "text": "Where a service falls short of the quality or manner of performance that is required by law or promised under the contract, the Act treats that as a deficiency. A borrower who was not given the statement of charges they were entitled to, or whose complaint the lender simply did not deal with, may be describing a deficiency in service.",
+      "topics": ["deficiency in service", "service", "shortfall", "complaint ignored"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "cpa-redress-forums",
+      "title": "Consumer Commissions hear complaints, starting at district level",
+      "source": "Consumer Protection Act, 2019",
+      "citation": "Consumer Protection Act, 2019 — District, State and National Consumer Disputes Redressal Commissions",
+      "text": "The Act establishes Consumer Disputes Redressal Commissions at district, State and national level. A consumer normally files at the District Commission, and which Commission can hear the case depends on the value involved. A complaint can generally be filed where the consumer lives or works, which matters for a borrower in a village whose lender is in a city. Complaints can be filed electronically, and there is a limitation period, so a borrower should not delay.",
+      "topics": ["consumer commission", "district forum", "where to file", "jurisdiction", "limitation", "e-filing"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "cpa-relief-available",
+      "title": "A Commission can order refunds, compensation and an end to the practice",
+      "source": "Consumer Protection Act, 2019",
+      "citation": "Consumer Protection Act, 2019 — reliefs a Consumer Commission may order",
+      "text": "If a complaint succeeds, a Consumer Commission can order the service provider to stop the unfair trade practice, to return the excess amount charged, to pay compensation for loss or injury suffered because of its negligence, and to pay the complainant's costs. It can also order the discontinuance of the practice so that other borrowers are not treated the same way.",
+      "topics": ["relief", "refund", "compensation", "costs", "stop the practice", "what can I get"],
+      "is_summary": true
+    }
+  ]
+}

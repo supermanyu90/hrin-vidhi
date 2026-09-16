@@ -1,0 +1,67 @@
+{
+  "_comment": [
+    "DEMO_MODE fixture for POST /intake/document when the harassment notice is uploaded.",
+    "F3 acceptance case: a 06:30 contact + a threat to the borrower's family, both of",
+    "which must produce a Violation carrying a Fair Practices Code citation.",
+    "'Vasuli Associates' is an invented agency name, not a real company."
+  ],
+  "kind": "notice",
+  "provider": "mock",
+  "parse_confidence": 0.85,
+  "unreadable_regions": [
+    "Signature block is smudged; signatory name not legible"
+  ],
+  "loan_facts": null,
+  "notice_facts": {
+    "sender": "Vasuli Associates (Authorised Recovery Agency for Sahyadri Finserv)",
+    "sender_is_court": false,
+    "sender_is_recovery_agent": true,
+    "notice_type": "court_notice_claim",
+    "demand_amount": 41400.0,
+    "deadline_days": 3,
+    "issued_on": "2026-09-09",
+    "threats_detected": [
+      {
+        "category": "family_contact",
+        "quote": "We will inform your wife's family and your in-laws about this default.",
+        "source": "document"
+      },
+      {
+        "category": "public_shaming",
+        "quote": "Our men will visit your village and announce your default before your neighbours.",
+        "source": "document"
+      },
+      {
+        "category": "arrest_claim",
+        "quote": "Non-payment within 3 days will result in your immediate arrest.",
+        "source": "document"
+      }
+    ],
+    "contact_times_mentioned": [
+      {
+        "time_24h": "06:30",
+        "on_date": "2026-09-14",
+        "channel": "call",
+        "caller": "Vasuli Associates",
+        "source": "document"
+      },
+      {
+        "time_24h": "21:45",
+        "on_date": "2026-09-12",
+        "channel": "call",
+        "caller": "Vasuli Associates",
+        "source": "document"
+      }
+    ],
+    "claims_to_verify": [
+      "Document is headed 'COURT NOTICE' but carries no court name, case number, or judicial seal.",
+      "Claims non-payment of a civil loan will cause 'immediate arrest'.",
+      "Claims authority to seize the two-wheeler 'without any further notice'."
+    ],
+    "source_notes": [
+      "Letterhead is that of a private recovery agency, not a court.",
+      "No cause title, case number, or court registry stamp anywhere on the page.",
+      "Deadline of 3 days is stated in bold at the foot of the notice."
+    ]
+  }
+}

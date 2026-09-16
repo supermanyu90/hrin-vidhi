@@ -1,0 +1,54 @@
+{
+  "_comment": [
+    "DEMO_MODE fixture for POST /intake/document when a loan paper is uploaded.",
+    "Mirrors what a vision model should return for the sample sanction letter:",
+    "populated where the paper is legible, null where it is not. Nothing guessed.",
+    "F2 acceptance: rate_type == 'flat', quoted_rate == 12, nbfc_registration_status set."
+  ],
+  "kind": "loan_paper",
+  "provider": "mock",
+  "parse_confidence": 0.88,
+  "unreadable_regions": [
+    "Bottom-right stamp partially cut off in the photograph",
+    "Reverse side of the sanction letter was not photographed"
+  ],
+  "loan_facts": {
+    "principal": 80000.0,
+    "quoted_rate": 12.0,
+    "rate_type": "flat",
+    "tenure_months": 24,
+    "processing_fee": 3200.0,
+    "other_fees": [
+      {
+        "label": "Documentation charges",
+        "amount": 750.0,
+        "rate_percent": null,
+        "disclosed_in_sanction_letter": false
+      },
+      {
+        "label": "Loan protection fee",
+        "amount": 1400.0,
+        "rate_percent": null,
+        "disclosed_in_sanction_letter": false
+      }
+    ],
+    "penalty_rate": 3.0,
+    "penalty_rate_basis": "per_month",
+    "emi": 4133.33,
+    "lender_name": "Sahyadri Finserv Private Limited",
+    "nbfc_registration_no": null,
+    "nbfc_registration_status": "absent",
+    "loan_purpose": "two-wheeler (second-hand)",
+    "sanction_date": "2025-08-14",
+    "kfs_present": false,
+    "apr_disclosed": false,
+    "source_notes": [
+      "Interest is printed as '12% p.a. flat' in the rate box.",
+      "Processing fee appears only on the disbursal voucher, not in the sanction letter body.",
+      "No RBI Certificate of Registration number is printed anywhere on the document.",
+      "Penalty clause reads '3% per month on overdue amount'.",
+      "No Key Fact Statement (KFS) page was attached to the photographed set."
+    ]
+  },
+  "notice_facts": null
+}

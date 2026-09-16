@@ -1,0 +1,51 @@
+{
+  "source_name": "Section 138, Negotiable Instruments Act, 1881 (cheque bounce)",
+  "source_note": "PLAIN-LANGUAGE SUMMARIES, NOT STATUTORY TEXT. Borrowers are very often threatened with 'cheque bounce case' language, so these chunks cover what Section 138 actually requires and — just as importantly — what it does not cover. Section 138 is named because we are confident of it; the procedural periods are summarised in plain words and the surrounding section numbers are deliberately omitted. A qualified reviewer should replace each `text` with vetted wording and set `verified_by` and `last_reviewed`.",
+  "chunks": [
+    {
+      "chunk_id": "ni-138-what-it-covers",
+      "title": "Section 138 applies when a cheque is dishonoured for want of funds",
+      "source": "Negotiable Instruments Act, 1881",
+      "citation": "Section 138, Negotiable Instruments Act, 1881",
+      "text": "Section 138 makes it an offence where a cheque drawn to discharge a debt or other liability is returned by the bank unpaid because the money in the account was insufficient, or because it exceeded the arrangement agreed with the bank. It applies to a cheque, and only where the cheque was for a legally enforceable debt. It does not turn every unpaid loan into a criminal matter.",
+      "topics": ["cheque bounce", "section 138", "dishonour", "insufficient funds", "criminal"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "ni-138-notice-and-time",
+      "title": "A written demand notice and a 15-day window come first",
+      "source": "Negotiable Instruments Act, 1881",
+      "citation": "Section 138, Negotiable Instruments Act, 1881 — proviso: notice and time to pay",
+      "text": "Before any case can be brought under Section 138, the person holding the cheque must send the drawer a written demand for the amount within thirty days of learning from the bank that the cheque was returned unpaid. The drawer then has fifteen days from receiving that notice to pay. Only if the drawer fails to pay within those fifteen days does the offence arise, and the complaint must then be filed in a court within the period the Act allows. A borrower who pays within the fifteen days ends the matter.",
+      "topics": ["notice period", "30 days", "15 days", "demand notice", "time limit", "how long do I have"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "ni-138-what-is-not-a-138-case",
+      "title": "Missing an EMI is not a cheque bounce offence",
+      "source": "Negotiable Instruments Act, 1881 — scope",
+      "citation": "Section 138, Negotiable Instruments Act, 1881 — scope of the offence",
+      "text": "Simply falling behind on instalments is not an offence under Section 138. The section is about a dishonoured cheque, and it requires that the specific steps be followed. A failed auto-debit or electronic mandate is not automatically the same thing as a bounced cheque, and whether it is covered is a question for a lawyer on the facts. A recovery agent who says that non-payment of an EMI is itself a criminal offence is overstating the position.",
+      "topics": ["EMI missed", "not criminal", "auto debit", "NACH", "ECS", "false threat", "arrest"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "ni-138-no-arrest-for-debt",
+      "title": "A private agency cannot have anyone arrested over an unpaid loan",
+      "source": "General position on civil debt recovery",
+      "citation": "General principle — non-payment of a civil debt is not itself a criminal offence; only a court may issue process",
+      "text": "Not paying back a loan is, by itself, a civil matter, not a crime. A lender or recovery agency has no power to arrest anyone, and cannot cause an arrest by saying so. Only a court can issue a summons or a warrant, and only in a case that has actually been filed before it. A demand letter from a private agency that threatens immediate arrest if money is not paid within a few days is asserting a power that the agency does not have.",
+      "topics": ["arrest", "police", "warrant", "jail", "criminal case", "false threat", "civil debt"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "ni-138-court-notice-vs-private-letter",
+      "title": "A letter headed 'Court Notice' from a recovery agency is not a court document",
+      "source": "General position on court process",
+      "citation": "General principle — court process issues from a court, under its seal and case number",
+      "text": "A genuine notice from a court carries the name of the court, a case or cause number, and the seal or signature of the court's registry, and it comes because a case has been filed. A letter printed on a recovery agency's or a law firm's letterhead is not a court notice, whatever is printed at the top of it. Words such as 'COURT NOTICE', 'FINAL LEGAL NOTICE' or 'WARRANT' on a private agency's letter do not give it the force of a court order, and presenting a private demand as if it were court process is a misrepresentation the borrower can complain about.",
+      "topics": ["court notice", "fake notice", "legal notice", "summons", "seal", "case number", "misrepresentation", "recovery agency letterhead"],
+      "is_summary": true
+    }
+  ]
+}

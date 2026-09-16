@@ -1,0 +1,60 @@
+{
+  "source_name": "Reserve Bank – Integrated Ombudsman Scheme, 2021 (RB-IOS)",
+  "source_note": "PLAIN-LANGUAGE SUMMARIES, NOT STATUTORY TEXT. These chunks describe how a borrower escalates a complaint from the lender to RBI's Ombudsman: when they become eligible, how to file, and what falls outside the scheme. Clause numbers are deliberately omitted; the `citation` field carries a descriptive locator. A qualified reviewer should replace each `text` with vetted wording and set `verified_by` and `last_reviewed`.",
+  "chunks": [
+    {
+      "chunk_id": "rbios-one-nation-one-ombudsman",
+      "title": "One RBI Ombudsman scheme now covers banks, NBFCs and payment operators",
+      "source": "Reserve Bank – Integrated Ombudsman Scheme, 2021",
+      "citation": "Reserve Bank – Integrated Ombudsman Scheme, 2021 — integrated, jurisdiction-neutral scheme",
+      "text": "RBI's earlier separate ombudsman schemes for banks, NBFCs and digital transactions were merged into a single integrated scheme, described as 'One Nation One Ombudsman'. A borrower no longer has to work out which scheme or which regional office applies. The scheme covers entities regulated by RBI, which includes registered NBFCs. Using the Ombudsman costs the complainant nothing.",
+      "topics": ["ombudsman", "RB-IOS", "one nation one ombudsman", "NBFC", "free", "which scheme"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "rbios-when-eligible",
+      "title": "Complain to the lender first, then escalate after 30 days",
+      "source": "Reserve Bank – Integrated Ombudsman Scheme, 2021",
+      "citation": "Reserve Bank – Integrated Ombudsman Scheme, 2021 — grounds on which a complaint may be made to the Ombudsman",
+      "text": "A borrower must first make a written complaint to the lender itself. The Ombudsman can be approached if the lender rejects the complaint, or if the borrower is not satisfied with the reply, or if the lender gives no reply at all within thirty days of receiving the complaint. There is also an outer time limit running from the lender's reply, so the borrower should escalate promptly rather than waiting.",
+      "topics": ["when to escalate", "30 days", "no reply", "rejected", "time limit", "complain to lender first"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "rbios-how-to-file",
+      "title": "File online through RBI's CMS portal, or by post or email",
+      "source": "Reserve Bank – Integrated Ombudsman Scheme, 2021",
+      "citation": "Reserve Bank – Integrated Ombudsman Scheme, 2021 — manner of filing a complaint; RBI Complaint Management System (CMS)",
+      "text": "A complaint can be filed online through RBI's Complaint Management System portal at cms.rbi.org.in. It can also be sent by post or by email to the Centralised Receipt and Processing Centre that RBI has set up for physical complaints. RBI also runs a contact centre that helps complainants file and track a complaint, including in Hindi, English and several regional languages. No fee is charged, and a borrower does not need a lawyer to file.",
+      "topics": ["how to file", "CMS", "cms.rbi.org.in", "online", "post", "email", "helpline", "no lawyer needed"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "rbios-what-it-can-address",
+      "title": "The Ombudsman deals with deficiency in service by a regulated lender",
+      "source": "Reserve Bank – Integrated Ombudsman Scheme, 2021",
+      "citation": "Reserve Bank – Integrated Ombudsman Scheme, 2021 — deficiency in service as the ground of complaint",
+      "text": "The scheme is built around 'deficiency in service' by an entity RBI regulates. Complaints about non-observance of RBI's directions — for instance the Fair Practices Code on recovery conduct, or the disclosure required of lenders — and about a lender's failure to deal with a grievance, fall within this. The Ombudsman can direct the lender to put things right and, in appropriate cases, to pay compensation.",
+      "topics": ["deficiency in service", "what can I complain about", "non-observance of RBI directions", "compensation"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "rbios-limits-and-exclusions",
+      "title": "Some matters fall outside the scheme",
+      "source": "Reserve Bank – Integrated Ombudsman Scheme, 2021",
+      "citation": "Reserve Bank – Integrated Ombudsman Scheme, 2021 — complaints not maintainable before the Ombudsman",
+      "text": "The Ombudsman will not take up a complaint that has not first been raised with the lender, one that is already before a court or another forum, or one that has already been decided. Complaints about a lender's commercial judgement as such — for example its decision on what interest rate to offer — are generally outside the scheme, although a failure to disclose the rate properly is a different matter. If the lender is not an entity RBI regulates, the Ombudsman is not the right route and the borrower should look to the consumer forum or the police instead.",
+      "topics": ["not maintainable", "exclusions", "already in court", "unregistered lender", "commercial decision", "limits"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "rbios-lender-must-display",
+      "title": "Lenders must display the Ombudsman details where borrowers can see them",
+      "source": "Reserve Bank – Integrated Ombudsman Scheme, 2021",
+      "citation": "Reserve Bank – Integrated Ombudsman Scheme, 2021 — display of the scheme's salient features by regulated entities",
+      "text": "A regulated lender is required to display the salient features of the Ombudsman scheme, and the details of its own grievance officer, at its branches and on its website, so that borrowers know the route exists. A lender that hides this, or tells a borrower there is no one above it to complain to, is not complying.",
+      "topics": ["display", "branch", "website", "borrower awareness", "who to complain to"],
+      "is_summary": true
+    }
+  ]
+}

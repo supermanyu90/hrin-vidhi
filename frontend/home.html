@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ऋण विधि · Hrin Vidhi — आपका कर्ज़, आपके अधिकार</title>
+<meta name="description" content="अपनी भाषा में बोलिए। जानिए आपके कर्ज़ की असली कीमत और आपके अधिकार। मुफ़्त।">
+<meta name="theme-color" content="#101A3D">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Yatra One: a Devanagari face drawn after hand-painted Indian shop signage.
+     Baloo 2: heavy, rounded, covers Devanagari + Latin. Two faces only —
+     webfont weight is a real cost on the connections this audience has. -->
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Yatra+One&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    /* Ledger ink, marigold, vermilion. Indigo is the blue of carbon-copy loan
+       paper; marigold is the ₹200 note and the flowers on every doorway. */
+    --ink:        #101A3D;
+    --ink-2:      #1B2856;
+    --ink-3:      #2A3872;
+    --paper:      #F7F3E8;
+    --paper-dim:  #DED8C8;
+    --marigold:   #FFB000;
+    --marigold-d: #E09400;
+    --vermilion:  #E8432F;
+    --mint:       #35C880;
+
+    --display: 'Yatra One', 'Baloo 2', system-ui, sans-serif;
+    --ui: 'Baloo 2', 'Noto Sans Devanagari', system-ui, -apple-system, sans-serif;
+
+    /* The shirorekha: the head-line Devanagari letters hang from. Every band
+       on this page hangs from one. */
+    --rule: 5px solid var(--ink);
+    --rule-light: 5px solid var(--paper);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  body {
+    font-family: var(--ui);
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  .band { padding: 0 20px; }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+
+  /* ── Band 1 · the hook ────────────────────────────────────────────── */
+  .hero {
+    background: var(--ink);
+    color: var(--paper);
+    padding-top: calc(14px + env(safe-area-inset-top, 0px));
+    padding-bottom: 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  /* Faint ledger ruling, like the loan paper itself. */
+  .hero::before {
+    content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      to bottom, transparent 0 43px, rgba(247,243,232,.045) 43px 44px);
+    pointer-events: none;
+  }
+  .hero > * { position: relative; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 14px; padding-bottom: 18px;
+  }
+  .mark { font-family: var(--display); font-size: 30px; line-height: 1; color: var(--marigold); }
+  .mark small {
+    display: block; font-family: var(--ui); font-weight: 600;
+    font-size: 11px; letter-spacing: .16em; color: var(--paper-dim);
+    text-transform: uppercase; margin-top: 5px;
+  }
+  .free-pill {
+    font-weight: 800; font-size: 13px; white-space: nowrap;
+    background: var(--marigold); color: var(--ink);
+    padding: 7px 14px; border-radius: 999px;
+  }
+
+  /* Language choice is the first decision on the page, not a dropdown. */
+  .lang-label {
+    font-size: 15px; color: var(--paper-dim); margin-bottom: 10px; font-weight: 600;
+  }
+  .langs { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 30px; }
+  .lang {
+    font-family: var(--ui); font-weight: 800; font-size: 19px;
+    padding: 11px 20px; border-radius: 14px; cursor: pointer;
+    background: transparent; color: var(--paper);
+    border: 2.5px solid var(--ink-3);
+    transition: transform .12s, background .16s, border-color .16s;
+  }
+  .lang:hover { border-color: var(--marigold); }
+  .lang[aria-pressed="true"] {
+    background: var(--marigold); color: var(--ink); border-color: var(--marigold);
+  }
+  .lang:active { transform: scale(.96); }
+
+  .headline {
+    font-family: var(--ui); font-weight: 800;
+    font-size: clamp(31px, 8.2vw, 62px); line-height: 1.12;
+    letter-spacing: -.5px; margin-bottom: 14px; max-width: 16ch;
+  }
+  .headline em { font-style: normal; color: var(--marigold); }
+  .sub {
+    font-size: clamp(16px, 4vw, 21px); color: var(--paper-dim);
+    max-width: 34ch; margin-bottom: 30px; font-weight: 600;
+  }
+
+  /* ── The mic: the one thing to press ──────────────────────────────── */
+  .cta-row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .mic-cta {
+    display: inline-flex; align-items: center; gap: 18px;
+    background: var(--marigold); color: var(--ink);
+    border: none; border-radius: 999px; cursor: pointer;
+    padding: 12px 30px 12px 12px; text-decoration: none;
+    font-family: var(--ui); font-weight: 800; font-size: clamp(19px, 5vw, 25px);
+    box-shadow: 0 6px 0 var(--marigold-d);
+    transition: transform .12s, box-shadow .12s;
+  }
+  .mic-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 0 var(--marigold-d); }
+  .mic-cta:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--marigold-d); }
+  .mic-ring {
+    width: 62px; height: 62px; border-radius: 50%; flex-shrink: 0;
+    background: var(--ink); color: var(--marigold);
+    display: grid; place-items: center; font-size: 29px;
+  }
+  .mic-ring span { animation: thump 2.4s ease-in-out infinite; }
+  @keyframes thump { 0%,72%,100% { transform: scale(1); } 80% { transform: scale(1.16); } }
+  @media (prefers-reduced-motion: reduce) { .mic-ring span { animation: none; } }
+
+  .reassure { font-size: 15px; color: var(--paper-dim); font-weight: 600; }
+  .reassure b { color: var(--paper); }
+
+  /* ── Band 2 · the live proof ──────────────────────────────────────── */
+  .proof { background: var(--paper); border-top: var(--rule-light); padding: 34px 20px 42px; }
+  .proof-eyebrow {
+    font-weight: 800; font-size: 13px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px;
+  }
+  .proof-title {
+    font-weight: 800; font-size: clamp(22px, 5.4vw, 34px);
+    line-height: 1.2; margin-bottom: 22px; max-width: 22ch;
+  }
+
+  .ledger {
+    border: 4px solid var(--ink); border-radius: 18px; overflow: hidden;
+    background: #fff;
+  }
+  .ledger-head {
+    background: var(--ink); color: var(--paper);
+    padding: 12px 18px; font-weight: 800; font-size: 16px;
+    display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+  .ledger-head span { color: var(--paper-dim); font-weight: 600; }
+  .compare { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 620px) { .compare { grid-template-columns: 1fr 1fr; } }
+  .cell { padding: 24px 18px; }
+  .cell + .cell { border-top: 3px solid var(--paper-dim); }
+  @media (min-width: 620px) {
+    .cell + .cell { border-top: none; border-left: 3px solid var(--paper-dim); }
+  }
+  .cell-label { font-weight: 800; font-size: 15px; color: var(--ink-3); margin-bottom: 2px; }
+  .cell-num {
+    font-family: var(--display); font-size: clamp(50px, 14vw, 82px);
+    line-height: 1; letter-spacing: -1px;
+  }
+  .cell.told .cell-num { color: var(--ink); }
+  .cell.real .cell-num { color: var(--vermilion); }
+  .cell-note { font-weight: 600; font-size: 14.5px; color: var(--ink-3); margin-top: 6px; }
+
+  .gap-strip {
+    background: var(--vermilion); color: #fff;
+    padding: 16px 18px; display: flex; align-items: baseline;
+    gap: 12px; flex-wrap: wrap; font-weight: 800;
+  }
+  .gap-strip .amount { font-family: var(--display); font-size: clamp(26px, 7vw, 40px); line-height: 1; }
+  .gap-strip .what { font-size: 15.5px; font-weight: 600; }
+
+  .proof-foot {
+    margin-top: 14px; font-size: 14px; color: var(--ink-3); font-weight: 600;
+  }
+  .proof-foot a { color: var(--ink); }
+
+  /* ── Band 3 · what it does ────────────────────────────────────────── */
+  .does { background: var(--ink); color: var(--paper); border-top: var(--rule); padding: 36px 20px 44px; }
+  .does-title {
+    font-weight: 800; font-size: clamp(22px, 5.4vw, 34px); margin-bottom: 24px;
+  }
+  .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media (min-width: 760px) { .tiles { grid-template-columns: repeat(4, 1fr); } }
+  .tile {
+    background: var(--ink-2); border-radius: 18px; padding: 20px 16px 18px;
+    border: 2.5px solid var(--ink-3);
+  }
+  .tile-ico {
+    font-size: 38px; line-height: 1; display: block; margin-bottom: 12px;
+  }
+  .tile-h { font-weight: 800; font-size: 19px; margin-bottom: 5px; }
+  .tile-p { font-size: 14.5px; color: var(--paper-dim); font-weight: 600; line-height: 1.45; }
+
+  /* ── Band 4 · the three things they cannot do ─────────────────────── */
+  .rights { background: var(--paper); border-top: var(--rule-light); padding: 36px 20px 40px; }
+  .rights-title { font-weight: 800; font-size: clamp(22px, 5.4vw, 34px); margin-bottom: 6px; }
+  .rights-sub { font-weight: 600; font-size: 16px; color: var(--ink-3); margin-bottom: 22px; }
+  .no-list { list-style: none; display: grid; gap: 12px; }
+  .no-item {
+    display: flex; gap: 15px; align-items: flex-start;
+    background: #fff; border: 3px solid var(--ink); border-radius: 16px; padding: 16px 18px;
+  }
+  .no-mark {
+    flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+    background: var(--vermilion); color: #fff;
+    display: grid; place-items: center; font-weight: 800; font-size: 20px;
+  }
+  .no-text { font-weight: 800; font-size: clamp(16px, 4.2vw, 20px); line-height: 1.35; }
+  .no-text small {
+    display: block; font-weight: 600; font-size: 13.5px;
+    color: var(--ink-3); margin-top: 4px;
+  }
+
+  /* ── Band 5 · close ───────────────────────────────────────────────── */
+  .close { background: var(--marigold); color: var(--ink); border-top: var(--rule); padding: 40px 20px 46px; text-align: center; }
+  .close h2 { font-weight: 800; font-size: clamp(25px, 6.4vw, 40px); line-height: 1.15; margin-bottom: 10px; }
+  .close p { font-weight: 600; font-size: 16.5px; margin-bottom: 24px; }
+  .close .mic-cta { background: var(--ink); color: var(--marigold); box-shadow: 0 6px 0 #05091c; }
+  .close .mic-cta:hover { box-shadow: 0 8px 0 #05091c; }
+  .close .mic-cta:active { box-shadow: 0 2px 0 #05091c; }
+  .close .mic-ring { background: var(--marigold); color: var(--ink); }
+
+  footer {
+    background: var(--ink); color: var(--paper-dim); border-top: var(--rule-light);
+    padding: 26px 20px calc(30px + env(safe-area-inset-bottom, 0px));
+    font-size: 13.5px; line-height: 1.65; font-weight: 600;
+  }
+  footer a { color: var(--marigold); }
+  .disclaimer-box {
+    border: 2.5px solid var(--ink-3); border-radius: 12px;
+    padding: 13px 15px; margin-bottom: 16px; color: var(--paper);
+  }
+  .foot-links { display: flex; gap: 18px; flex-wrap: wrap; }
+
+  :focus-visible { outline: 4px solid var(--marigold); outline-offset: 3px; border-radius: 4px; }
+  .close :focus-visible, .hero :focus-visible { outline-color: var(--paper); }
+
+  /* Entrance: one orchestrated reveal, not scattered effects. */
+  .rise { opacity: 0; transform: translateY(14px); animation: rise .55s cubic-bezier(.2,.7,.3,1) forwards; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .rise { opacity: 1; transform: none; animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ Band 1 ══════════════════════════════════════════════════════ -->
+<header class="hero band">
+  <div class="wrap">
+    <div class="topbar rise">
+      <div class="mark">ऋण विधि<small>Hrin Vidhi</small></div>
+      <div class="free-pill" data-t="free">पूरी तरह मुफ़्त</div>
+    </div>
+
+    <div class="rise" style="animation-delay:.05s">
+      <div class="lang-label" data-t="pick">अपनी भाषा चुनिए</div>
+      <div class="langs" id="langs" role="group" aria-label="भाषा चुनिए"></div>
+    </div>
+
+    <h1 class="headline rise" id="headline" style="animation-delay:.1s"></h1>
+    <p class="sub rise" id="sub" style="animation-delay:.15s"></p>
+
+    <div class="cta-row rise" style="animation-delay:.2s">
+      <a class="mic-cta" id="ctaTop" href="/app">
+        <span class="mic-ring" aria-hidden="true"><span>🎤</span></span>
+        <span data-t="cta">बोलकर शुरू कीजिए</span>
+      </a>
+      <p class="reassure" id="reassure"></p>
+    </div>
+  </div>
+</header>
+
+<!-- ══ Band 2 · live proof ═════════════════════════════════════════ -->
+<section class="proof band">
+  <div class="wrap">
+    <div class="proof-eyebrow" data-t="realCase">एक सच्चा उदाहरण</div>
+    <h2 class="proof-title" id="proofTitle"></h2>
+
+    <div class="ledger">
+      <div class="ledger-head">
+        <strong id="ledgerLoan">₹80,000 — दुचाकी का कर्ज़</strong>
+        <span id="ledgerTerm">24 महीने</span>
+      </div>
+      <div class="compare">
+        <div class="cell told">
+          <div class="cell-label" data-t="theySaid">उन्होंने कहा</div>
+          <div class="cell-num">12%</div>
+          <div class="cell-note" data-t="onPaper">कागज़ पर यही लिखा था</div>
+        </div>
+        <div class="cell real">
+          <div class="cell-label" data-t="youPay">आप दे रहे हैं</div>
+          <div class="cell-num" id="realRate">—</div>
+          <div class="cell-note" data-t="afterAll">फ़ीस और तरीक़ा जोड़ने के बाद</div>
+        </div>
+      </div>
+      <div class="gap-strip">
+        <span class="amount" id="gapAmount">—</span>
+        <span class="what" data-t="extra">इतना ज़्यादा — बिना बताए</span>
+      </div>
+    </div>
+
+    <p class="proof-foot">
+      <span id="proofFoot"></span>
+      <a href="/visualizer" id="seeMath"></a>
+    </p>
+  </div>
+</section>
+
+<!-- ══ Band 3 · what it does ═══════════════════════════════════════ -->
+<section class="does band">
+  <div class="wrap">
+    <h2 class="does-title" id="doesTitle"></h2>
+    <div class="tiles" id="tiles"></div>
+  </div>
+</section>
+
+<!-- ══ Band 4 · what they cannot do ════════════════════════════════ -->
+<section class="rights band">
+  <div class="wrap">
+    <h2 class="rights-title" id="rightsTitle"></h2>
+    <p class="rights-sub" id="rightsSub"></p>
+    <ul class="no-list" id="noList"></ul>
+  </div>
+</section>
+
+<!-- ══ Band 5 · close ══════════════════════════════════════════════ -->
+<section class="close band">
+  <div class="wrap">
+    <h2 id="closeTitle"></h2>
+    <p id="closeSub"></p>
+    <a class="mic-cta" id="ctaBottom" href="/app">
+      <span class="mic-ring" aria-hidden="true"><span>🎤</span></span>
+      <span data-t="cta">बोलकर शुरू कीजिए</span>
+    </a>
+  </div>
+</section>
+
+<footer class="band">
+  <div class="wrap">
+    <div class="disclaimer-box" id="disclaimerBox"></div>
+    <div class="foot-links">
+      <a href="/app" data-t="openApp">सहायक खोलें</a>
+      <a href="/visualizer" data-t="calc">कर्ज़ का हिसाब</a>
+      <a href="/health">Status</a>
+    </div>
+  </div>
+</footer>
+
+<script src="/static/i18n.js?v={{ASSET_VERSION}}"></script>
+<script>
+"use strict";
+
+/* The landing page's job is one thing: get him to press the microphone.
+   Everything here serves that, and the hero proof is a LIVE figure from
+   /calc/debt-trap rather than a claim typed into the markup. */
+
+const HOME = {
+  hi: {
+    free: 'पूरी तरह मुफ़्त', pick: 'अपनी भाषा चुनिए',
+    headline: 'आपका कर्ज़ असल में <em>कितने का</em> है?',
+    sub: 'बोलिए, कागज़ की फ़ोटो भेजिए। हम आपकी भाषा में बताएँगे।',
+    cta: 'बोलकर शुरू कीजिए',
+    reassure: '<b>वकील नहीं चाहिए.</b> पढ़ना नहीं आता तो भी चलेगा.',
+    realCase: 'एक सच्चा उदाहरण',
+    proofTitle: 'रमेश को कहा गया था बारह प्रतिशत। असल में वो इतना दे रहे थे:',
+    loan: '₹80,000 — दुचाकी का कर्ज़', term: '24 महीने',
+    theySaid: 'उन्होंने कहा', youPay: 'आप दे रहे हैं',
+    onPaper: 'कागज़ पर यही लिखा था', afterAll: 'फ़ीस और तरीक़ा जोड़ने के बाद',
+    extra: 'इतना ज़्यादा — बिना बताए',
+    proofFoot: 'यह गिनती अभी, इसी वक़्त की गई है। ',
+    seeMath: 'पूरा हिसाब देखिए →',
+    doesTitle: 'यह आपके लिए क्या करेगा',
+    tiles: [
+      ['🎤', 'आप बोलिए', 'अपनी भाषा में. पढ़ना-लिखना ज़रूरी नहीं.'],
+      ['📄', 'कागज़ दिखाइए', 'कर्ज़ का कागज़ या नोटिस की फ़ोटो भेजिए.'],
+      ['🔊', 'सुनिए', 'आपके अधिकार, आवाज़ में, आपकी भाषा में.'],
+      ['✉️', 'चिट्ठी लीजिए', 'शिकायत की तैयार चिट्ठी. भेज दीजिए.'],
+    ],
+    rightsTitle: 'ये काम वो नहीं कर सकते',
+    rightsSub: 'चाहे आपने कितना भी पैसा देना हो।',
+    no: [
+      ['सुबह 8 से पहले या रात 7 के बाद फ़ोन', 'वसूली वाले इन घंटों में आपसे बात नहीं कर सकते।'],
+      ['घरवालों या पड़ोसियों को बताना', 'आपका कर्ज़ आपके और बैंक के बीच की बात है।'],
+      ['गिरफ़्तारी की धमकी', 'कर्ज़ न चुकाना अपराध नहीं है। एजेंट अदालत नहीं है।'],
+    ],
+    closeTitle: 'दो मिनट. बस बोलना है.',
+    closeSub: 'न कोई फ़ीस, न कोई फ़ॉर्म, न कोई वकील।',
+    openApp: 'सहायक खोलें', calc: 'कर्ज़ का हिसाब',
+  },
+  mr: {
+    free: 'पूर्णपणे मोफत', pick: 'तुमची भाषा निवडा',
+    headline: 'तुमचं कर्ज खरंच <em>किती</em> आहे?',
+    sub: 'बोला, कागदाचा फोटो पाठवा. आम्ही तुमच्या भाषेत सांगू.',
+    cta: 'बोलून सुरू करा',
+    reassure: '<b>वकील नको.</b> वाचता येत नसेल तरी चालेल.',
+    realCase: 'एक खरं उदाहरण',
+    proofTitle: 'रमेशला सांगितलं होतं बारा टक्के. प्रत्यक्षात तो इतकं देत होता:',
+    loan: '₹80,000 — दुचाकीचं कर्ज', term: '24 महिने',
+    theySaid: 'त्यांनी सांगितलं', youPay: 'तुम्ही देत आहात',
+    onPaper: 'कागदावर हेच लिहिलं होतं', afterAll: 'फी आणि पद्धत धरल्यावर',
+    extra: 'एवढं जास्त — न सांगता',
+    proofFoot: 'हा हिशोब आत्ता, याच क्षणी केला आहे. ',
+    seeMath: 'संपूर्ण हिशोब पहा →',
+    doesTitle: 'हे तुमच्यासाठी काय करेल',
+    tiles: [
+      ['🎤', 'तुम्ही बोला', 'तुमच्या भाषेत. लिहिता-वाचता येणं गरजेचं नाही.'],
+      ['📄', 'कागद दाखवा', 'कर्जाचा कागद किंवा नोटिशीचा फोटो पाठवा.'],
+      ['🔊', 'ऐका', 'तुमचे हक्क, आवाजात, तुमच्या भाषेत.'],
+      ['✉️', 'पत्र घ्या', 'तक्रारीचं तयार पत्र. पाठवून द्या.'],
+    ],
+    rightsTitle: 'ही कामं ते करू शकत नाहीत',
+    rightsSub: 'तुमच्याकडे कितीही पैसे येणं असलं तरी.',
+    no: [
+      ['सकाळी ८ च्या आधी किंवा रात्री ७ नंतर फोन', 'वसुली करणारे या वेळेत तुमच्याशी बोलू शकत नाहीत.'],
+      ['घरच्यांना किंवा शेजाऱ्यांना सांगणं', 'तुमचं कर्ज ही तुमची आणि बँकेची गोष्ट आहे.'],
+      ['अटकेची धमकी', 'कर्ज न फेडणं हा गुन्हा नाही. एजंट म्हणजे न्यायालय नव्हे.'],
+    ],
+    closeTitle: 'दोन मिनिटं. फक्त बोलायचं आहे.',
+    closeSub: 'फी नाही, फॉर्म नाही, वकील नाही.',
+    openApp: 'सहाय्यक उघडा', calc: 'कर्जाचा हिशोब',
+  },
+  ta: {
+    free: 'முற்றிலும் இலவசம்', pick: 'உங்கள் மொழியைத் தேர்ந்தெடுங்கள்',
+    headline: 'உங்கள் கடன் உண்மையில் <em>எவ்வளவு</em>?',
+    sub: 'பேசுங்கள், ஆவணத்தின் புகைப்படம் அனுப்புங்கள். உங்கள் மொழியில் சொல்கிறோம்.',
+    cta: 'பேசி ஆரம்பியுங்கள்',
+    reassure: '<b>வழக்கறிஞர் தேவையில்லை.</b> படிக்கத் தெரியாவிட்டாலும் பரவாயில்லை.',
+    realCase: 'ஒரு உண்மையான உதாரணம்',
+    proofTitle: 'ரமேஷிடம் பன்னிரண்டு சதவீதம் என்று சொன்னார்கள். உண்மையில் அவர் கட்டியது:',
+    loan: '₹80,000 — இருசக்கர வாகனக் கடன்', term: '24 மாதம்',
+    theySaid: 'அவர்கள் சொன்னது', youPay: 'நீங்கள் கட்டுவது',
+    onPaper: 'ஆவணத்தில் இதுதான் இருந்தது', afterAll: 'கட்டணமும் முறையும் சேர்த்தால்',
+    extra: 'இவ்வளவு அதிகம் — சொல்லாமல்',
+    proofFoot: 'இந்தக் கணக்கு இப்போதுதான் போடப்பட்டது. ',
+    seeMath: 'முழு கணக்கைப் பாருங்கள் →',
+    doesTitle: 'இது உங்களுக்கு என்ன செய்யும்',
+    tiles: [
+      ['🎤', 'நீங்கள் பேசுங்கள்', 'உங்கள் மொழியில். எழுதப் படிக்கத் தேவையில்லை.'],
+      ['📄', 'ஆவணம் காட்டுங்கள்', 'கடன் ஆவணம் அல்லது நோட்டீஸ் புகைப்படம்.'],
+      ['🔊', 'கேளுங்கள்', 'உங்கள் உரிமைகள், குரலில், உங்கள் மொழியில்.'],
+      ['✉️', 'கடிதம் பெறுங்கள்', 'தயாரான புகார் கடிதம். அனுப்பிவிடுங்கள்.'],
+    ],
+    rightsTitle: 'இவற்றை அவர்கள் செய்ய முடியாது',
+    rightsSub: 'நீங்கள் எவ்வளவு கட்ட வேண்டியிருந்தாலும்.',
+    no: [
+      ['காலை 8 முன்பு, இரவு 7 பின்பு அழைப்பு', 'வசூல் செய்பவர்கள் இந்த நேரத்தில் பேச முடியாது.'],
+      ['வீட்டாரிடமோ அண்டை வீட்டாரிடமோ சொல்வது', 'உங்கள் கடன் உங்களுக்கும் வங்கிக்கும் இடையிலானது.'],
+      ['கைது செய்வதாக மிரட்டல்', 'கடன் கட்டாதது குற்றம் அல்ல. முகவர் நீதிமன்றம் அல்ல.'],
+    ],
+    closeTitle: 'இரண்டு நிமிடம். பேசினால் போதும்.',
+    closeSub: 'கட்டணம் இல்லை, படிவம் இல்லை, வழக்கறிஞர் இல்லை.',
+    openApp: 'உதவியாளரைத் திறக்க', calc: 'கடன் கணக்கு',
+  },
+  te: {
+    free: 'పూర్తిగా ఉచితం', pick: 'మీ భాషను ఎంచుకోండి',
+    headline: 'మీ రుణం నిజంగా <em>ఎంత</em>?',
+    sub: 'మాట్లాడండి, పత్రం ఫోటో పంపండి. మీ భాషలో చెబుతాం.',
+    cta: 'మాట్లాడి ప్రారంభించండి',
+    reassure: '<b>న్యాయవాది అవసరం లేదు.</b> చదవడం రాకపోయినా ఫర్వాలేదు.',
+    realCase: 'ఒక నిజమైన ఉదాహరణ',
+    proofTitle: 'రమేష్‌కు పన్నెండు శాతం అని చెప్పారు. నిజానికి అతను కడుతున్నది:',
+    loan: '₹80,000 — ద్విచక్ర వాహన రుణం', term: '24 నెలలు',
+    theySaid: 'వాళ్ళు చెప్పింది', youPay: 'మీరు కడుతున్నది',
+    onPaper: 'పత్రంలో ఇదే ఉంది', afterAll: 'ఫీజు, పద్ధతి కలిపితే',
+    extra: 'ఇంత ఎక్కువ — చెప్పకుండా',
+    proofFoot: 'ఈ లెక్క ఇప్పుడే వేయబడింది. ',
+    seeMath: 'పూర్తి లెక్క చూడండి →',
+    doesTitle: 'ఇది మీ కోసం ఏమి చేస్తుంది',
+    tiles: [
+      ['🎤', 'మీరు మాట్లాడండి', 'మీ భాషలో. చదవడం రాయడం అవసరం లేదు.'],
+      ['📄', 'పత్రం చూపండి', 'రుణ పత్రం లేదా నోటీసు ఫోటో పంపండి.'],
+      ['🔊', 'వినండి', 'మీ హక్కులు, గొంతులో, మీ భాషలో.'],
+      ['✉️', 'లేఖ తీసుకోండి', 'సిద్ధమైన ఫిర్యాదు లేఖ. పంపేయండి.'],
+    ],
+    rightsTitle: 'ఇవి వాళ్ళు చేయలేరు',
+    rightsSub: 'మీరు ఎంత కట్టవలసి ఉన్నా సరే.',
+    no: [
+      ['ఉదయం 8 ముందు, రాత్రి 7 తర్వాత ఫోన్', 'వసూలు చేసేవాళ్ళు ఈ సమయంలో మాట్లాడలేరు.'],
+      ['ఇంట్లోవాళ్ళకు, పొరుగువారికి చెప్పడం', 'మీ రుణం మీకూ బ్యాంకుకూ మధ్య విషయం.'],
+      ['అరెస్టు చేస్తామని బెదిరింపు', 'రుణం కట్టకపోవడం నేరం కాదు. ఏజెంట్ కోర్టు కాదు.'],
+    ],
+    closeTitle: 'రెండు నిమిషాలు. మాట్లాడితే చాలు.',
+    closeSub: 'ఫీజు లేదు, ఫారం లేదు, న్యాయవాది లేదు.',
+    openApp: 'సహాయకుడిని తెరవండి', calc: 'రుణ లెక్క',
+  },
+  bho: {
+    free: 'पूरा तरह मुफ्त', pick: 'आपन भाषा चुनीं',
+    headline: 'रउआ के करजा असल में <em>केतना</em> बा?',
+    sub: 'बोलीं, कागज के फोटो भेजीं। हम रउआ के भाषा में बताइब।',
+    cta: 'बोल के शुरू करीं',
+    reassure: '<b>वकील ना चाहीं.</b> पढ़े ना आवे त भी चली.',
+    realCase: 'एगो सच्चा उदाहरण',
+    proofTitle: 'रमेश के कहल गइल रहे बारह परसेंट। असल में ऊ एतना देत रहलें:',
+    loan: '₹80,000 — दुपहिया के करजा', term: '24 महीना',
+    theySaid: 'ऊ लोग कहलस', youPay: 'रउआ देत बानी',
+    onPaper: 'कागज पर इहे लिखल रहे', afterAll: 'फीस आ तरीका जोड़े के बाद',
+    extra: 'एतना जादा — बिना बतवले',
+    proofFoot: 'ई गिनती अबहीं, एही घरी कइल गइल बा। ',
+    seeMath: 'पूरा हिसाब देखीं →',
+    doesTitle: 'ई रउआ खातिर का करी',
+    tiles: [
+      ['🎤', 'रउआ बोलीं', 'आपन भाषा में. पढ़ल-लिखल जरूरी ना.'],
+      ['📄', 'कागज देखाईं', 'करजा के कागज भा नोटिस के फोटो भेजीं.'],
+      ['🔊', 'सुनीं', 'रउआ के अधिकार, आवाज में, रउआ के भाषा में.'],
+      ['✉️', 'चिट्ठी लीं', 'शिकायत के तइयार चिट्ठी. भेज दीं.'],
+    ],
+    rightsTitle: 'ई काम ऊ लोग ना कर सकेला',
+    rightsSub: 'चाहे रउआ केतनो पइसा देवे के होखे।',
+    no: [
+      ['भोरे 8 से पहिले भा रात 7 के बाद फोन', 'वसूली वाला एह घरी में बात ना कर सकेला।'],
+      ['घरवाला भा पड़ोसी के बतावल', 'रउआ के करजा रउआ आ बैंक के बीच के बात ह।'],
+      ['गिरफ्तारी के धमकी', 'करजा ना चुकावल अपराध ना ह। एजेंट अदालत ना ह।'],
+    ],
+    closeTitle: 'दू मिनट. बस बोले के बा.',
+    closeSub: 'ना कवनो फीस, ना फॉर्म, ना वकील।',
+    openApp: 'सहायक खोलीं', calc: 'करजा के हिसाब',
+  },
+  en: {
+    free: 'Completely free', pick: 'Choose your language',
+    headline: 'What is your loan <em>really</em> costing you?',
+    sub: 'Speak. Send a photo of the paper. We answer in your language.',
+    cta: 'Start by speaking',
+    reassure: '<b>No lawyer needed.</b> You do not have to be able to read.',
+    realCase: 'A real example',
+    proofTitle: 'Ramesh was told twelve percent. This is what he was actually paying:',
+    loan: '₹80,000 — two-wheeler loan', term: '24 months',
+    theySaid: 'They said', youPay: 'You are paying',
+    onPaper: 'That is what the paper said', afterAll: 'once fees and the method are counted',
+    extra: 'more than he was promised',
+    proofFoot: 'This was worked out just now, live. ',
+    seeMath: 'See the full calculation →',
+    doesTitle: 'What this does for you',
+    tiles: [
+      ['🎤', 'You speak', 'In your own language. Reading is not required.'],
+      ['📄', 'Show the paper', 'A photo of the loan paper or the notice.'],
+      ['🔊', 'You listen', 'Your rights, read aloud, in your language.'],
+      ['✉️', 'Take the letter', 'A complaint letter, ready to send.'],
+    ],
+    rightsTitle: 'These are things they cannot do',
+    rightsSub: 'However much you owe.',
+    no: [
+      ['Call before 8am or after 7pm', 'Recovery agents may not contact you outside those hours.'],
+      ['Tell your family or your neighbours', 'Your loan is between you and the lender.'],
+      ['Threaten you with arrest', 'Not repaying is not a crime. An agent is not a court.'],
+    ],
+    closeTitle: 'Two minutes. All you do is talk.',
+    closeSub: 'No fee, no form, no lawyer.',
+    openApp: 'Open the assistant', calc: 'Loan calculator',
+  },
+};
+
+let lang = 'hi';
+
+/* Ramesh's figures. The rate and gap below are placeholders only — they are
+   replaced by the real values from /calc/debt-trap as soon as it answers, so
+   the page cannot quote a number the backend would not produce. */
+const CASE = { principal: 80000, quoted_rate: 12, tenure_months: 24,
+               rate_type: 'flat', processing_fee: 3200, other_fees_total: 2150 };
+
+const $ = id => document.getElementById(id);
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function inr(n) {
+  const abs = Math.abs(Math.round(n));
+  return '₹' + abs.toLocaleString('en-IN');
+}
+
+function paint() {
+  const c = HOME[lang];
+  document.documentElement.lang = lang;
+
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const v = c[el.dataset.t];
+    if (v) el.textContent = v;
+  });
+
+  $('headline').innerHTML = c.headline;
+  $('sub').textContent = c.sub;
+  $('reassure').innerHTML = c.reassure;
+  $('proofTitle').textContent = c.proofTitle;
+  $('ledgerLoan').textContent = c.loan;
+  $('ledgerTerm').textContent = c.term;
+  $('proofFoot').textContent = c.proofFoot;
+  $('seeMath').textContent = c.seeMath;
+  $('doesTitle').textContent = c.doesTitle;
+  $('rightsTitle').textContent = c.rightsTitle;
+  $('rightsSub').textContent = c.rightsSub;
+  $('closeTitle').textContent = c.closeTitle;
+  $('closeSub').textContent = c.closeSub;
+
+  $('tiles').innerHTML = c.tiles.map(([ico, h, p]) => `
+    <div class="tile">
+      <span class="tile-ico" aria-hidden="true">${ico}</span>
+      <div class="tile-h">${esc(h)}</div>
+      <div class="tile-p">${esc(p)}</div>
+    </div>`).join('');
+
+  $('noList').innerHTML = c.no.map(([h, p]) => `
+    <li class="no-item">
+      <span class="no-mark" aria-hidden="true">✕</span>
+      <span class="no-text">${esc(h)}<small>${esc(p)}</small></span>
+    </li>`).join('');
+
+  // The §9 disclaimer, in the borrower's language, from the shared phrasebook —
+  // the same words the app speaks and the letter carries.
+  $('disclaimerBox').textContent = (typeof DISCLAIMER !== 'undefined')
+    ? (DISCLAIMER[lang] || DISCLAIMER.en) : '';
+
+  // Carry the choice into the app so he never picks a language twice.
+  const q = '?lang=' + encodeURIComponent(lang);
+  $('ctaTop').href = '/app' + q;
+  $('ctaBottom').href = '/app' + q;
+  document.querySelector('.foot-links a[data-t="openApp"]').href = '/app' + q;
+
+  [...$('langs').children].forEach(b =>
+    b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+}
+
+function buildLangs() {
+  $('langs').innerHTML = LANGUAGES.map(l =>
+    `<button class="lang" type="button" data-lang="${l.code}"
+             aria-pressed="${l.code === lang}">${esc(l.name)}</button>`).join('');
+  $('langs').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    lang = b.dataset.lang;
+    try { localStorage.setItem('hv-lang', lang); } catch (err) { /* private mode */ }
+    paint();
+  });
+}
+
+/* Count the real rate up from the quoted one. The reveal IS the product:
+   the number he was told becoming the number he actually pays. */
+function animateTo(el, from, to, suffix, ms) {
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced || ms === 0) { el.textContent = to.toFixed(2) + suffix; return; }
+  const t0 = performance.now();
+  (function step(now) {
+    const p = Math.min(1, (now - t0) / ms);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = (from + (to - from) * eased).toFixed(2) + suffix;
+    if (p < 1) requestAnimationFrame(step);
+  })(t0);
+}
+
+async function loadRealFigures() {
+  try {
+    const r = await fetch('/calc/debt-trap', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(CASE),
+    });
+    if (!r.ok) return;
+    const a = await r.json();
+
+    /* Show the true figures the moment they arrive. The reveal animation is
+       a flourish layered on top — if the observer never fires (the band is
+       never scrolled to, or IO is unsupported) the page is still showing the
+       right numbers rather than a placeholder that reads as real. */
+    $('realRate').textContent = a.all_in_apr.toFixed(2) + '%';
+    $('gapAmount').textContent = inr(a.hidden_cost_gap);
+
+    const proof = document.querySelector('.proof');
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(entries => {
+        if (!entries.some(e => e.isIntersecting)) return;
+        io.disconnect();
+        animateTo($('realRate'), a.quoted_rate, a.all_in_apr, '%', 1100);
+      }, { threshold: 0.35 });
+      io.observe(proof);
+    }
+  } catch (err) {
+    // The page still reads correctly without the live figure; it simply keeps
+    // showing the quoted rate rather than inventing the real one.
+  }
+}
+
+(function init() {
+  try {
+    const saved = localStorage.getItem('hv-lang');
+    if (saved && HOME[saved]) lang = saved;
+  } catch (err) { /* private mode */ }
+  const url = new URLSearchParams(location.search).get('lang');
+  if (url && HOME[url]) lang = url;
+
+  buildLangs();
+  paint();
+  loadRealFigures();
+})();
+</script>
+</body>
+</html>

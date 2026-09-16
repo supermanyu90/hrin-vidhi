@@ -1,0 +1,78 @@
+{
+  "source_name": "RBI Guidelines on Digital Lending",
+  "source_note": "PLAIN-LANGUAGE SUMMARIES, NOT STATUTORY TEXT. These chunks paraphrase borrower protections from RBI's digital lending framework — the Key Fact Statement, all-inclusive APR disclosure, the cooling-off period, limits on unsolicited credit increases, and conduct expected of lending service providers. Paragraph numbers are deliberately omitted; the `citation` field carries a descriptive locator. Several of these protections are framed for digital lending specifically, and how far they reach an informal or offline loan is a question for a lawyer. A qualified reviewer should replace each `text` with vetted wording and set `verified_by` and `last_reviewed`.",
+  "chunks": [
+    {
+      "chunk_id": "rbi-dl-kfs-required",
+      "title": "A Key Fact Statement must be given before the loan is signed",
+      "source": "RBI Guidelines on Digital Lending",
+      "citation": "RBI Guidelines on Digital Lending — Key Fact Statement (KFS)",
+      "text": "Before a borrower commits to a digital loan, the lender must give a Key Fact Statement in a standard format, in a language the borrower understands. It has to state the loan amount, the all-inclusive annual percentage rate, the tenure, the instalment, every fee and charge, the penalty for late payment, the cooling-off period, and the grievance officer's details. Any fee or charge that is not in the Key Fact Statement cannot later be charged to the borrower without their consent.",
+      "topics": ["KFS", "key fact statement", "disclosure", "before signing", "fees", "charges", "not disclosed"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "rbi-dl-apr-disclosure",
+      "title": "The all-inclusive APR must be disclosed, not just a headline rate",
+      "source": "RBI Guidelines on Digital Lending",
+      "citation": "RBI Guidelines on Digital Lending — disclosure of the all-inclusive Annual Percentage Rate",
+      "text": "The lender must disclose an all-inclusive annual percentage rate, meaning the real annual cost of the loan to the borrower including the interest and all fees and charges the lender levies. Quoting only a low-sounding headline number while the true annual cost is far higher does not meet this requirement. This matters especially where interest is quoted as a flat rate on the original amount, because the true annual cost of a flat-rate loan is close to double the quoted figure.",
+      "topics": ["APR", "annual percentage rate", "flat rate", "true cost", "effective rate", "hidden cost", "disclosure"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "rbi-dl-no-hidden-charges",
+      "title": "Charges that were not disclosed up front cannot simply be added",
+      "source": "RBI Guidelines on Digital Lending",
+      "citation": "RBI Guidelines on Digital Lending — fees and charges to be disclosed in the KFS",
+      "text": "All fees and charges payable by the borrower must be disclosed to the borrower up front, in the Key Fact Statement and the sanction letter. A processing fee, documentation charge, insurance or protection fee, or platform fee that appears only on the disbursal voucher, or that is silently deducted from the amount paid out, has not been properly disclosed. The borrower is entitled to an itemised account of every rupee deducted or charged.",
+      "topics": ["processing fee", "hidden charges", "documentation charges", "insurance", "deducted at disbursal", "itemised"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "rbi-dl-penal-charges-reasonable",
+      "title": "Penalty for late payment must be reasonable and disclosed in advance",
+      "source": "RBI Guidelines on Digital Lending / RBI instructions on penal charges",
+      "citation": "RBI — penal charges on loans to be reasonable, disclosed, and not capitalised",
+      "text": "A penalty for late payment must be disclosed to the borrower in advance and must be reasonable, proportionate to the default. RBI's approach treats such amounts as penal charges rather than as an additional rate of interest, and they are not to be added to the principal so as to earn further interest. A penalty stated only in fine print, or one so large that it quickly exceeds the instalment itself, should be questioned.",
+      "topics": ["penalty", "penal charges", "late payment", "default charges", "per month penalty", "compounding"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "rbi-dl-cooling-off",
+      "title": "A cooling-off period allows exit without a penalty",
+      "source": "RBI Guidelines on Digital Lending",
+      "citation": "RBI Guidelines on Digital Lending — cooling-off / look-up period",
+      "text": "A borrower must be given a cooling-off or look-up period, stated in the Key Fact Statement, during which they may exit the digital loan by repaying the principal and the proportionate annual percentage rate, without paying any penalty for doing so.",
+      "topics": ["cooling off", "look-up period", "cancel loan", "exit", "prepayment penalty"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "rbi-dl-no-unsolicited-increase",
+      "title": "Credit limits cannot be raised without the borrower's explicit consent",
+      "source": "RBI Guidelines on Digital Lending",
+      "citation": "RBI Guidelines on Digital Lending — no automatic increase in credit limit without consent",
+      "text": "A lender must not automatically increase a borrower's credit limit without the borrower's explicit prior consent. A limit that rises on its own, or an additional loan pushed to a borrower who did not ask for it, is not permitted.",
+      "topics": ["credit limit", "unsolicited", "consent", "automatic increase", "top-up loan"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "rbi-dl-lsp-accountability",
+      "title": "The regulated lender stays responsible for the app or agent it lends through",
+      "source": "RBI Guidelines on Digital Lending",
+      "citation": "RBI Guidelines on Digital Lending — responsibility for lending service providers",
+      "text": "Where a regulated lender lends through an app, platform or agent, the lender remains responsible for the conduct of that lending service provider. The borrower must be told which regulated entity is actually lending the money. A borrower cannot be passed between an app and a lender with each denying responsibility; the regulated lender must handle the complaint.",
+      "topics": ["LSP", "lending service provider", "app", "platform", "who is the lender", "responsibility"],
+      "is_summary": true
+    },
+    {
+      "chunk_id": "rbi-dl-data-and-recovery-conduct",
+      "title": "Borrower data must not be harvested, and recovery through the phone is restricted",
+      "source": "RBI Guidelines on Digital Lending",
+      "citation": "RBI Guidelines on Digital Lending — data collection to be need-based and with consent",
+      "text": "A lending app may collect only the data it actually needs, with the borrower's explicit consent, and must not take the borrower's contact list, photo gallery or files in order to use them for recovery. Contacting people from a borrower's phone contacts, or using their photographs, to pressure or shame them into paying is outside what is permitted.",
+      "topics": ["data", "privacy", "contact list", "phone permissions", "gallery", "app", "shaming"],
+      "is_summary": true
+    }
+  ]
+}

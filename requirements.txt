@@ -1,0 +1,19 @@
+# Core runtime. Nothing here reaches the network at import time, and the
+# full DEMO_MODE flow needs no other package.
+fastapi==0.141.1
+uvicorn[standard]==0.53.0
+pydantic==2.13.5
+pydantic-settings==2.15.0
+python-multipart==0.0.32      # multipart uploads: voice notes and photos
+
+# Tests
+pytest==9.1.1
+anyio==4.11.0                 # async test cases (session store TTL / cap)
+httpx==0.28.1                 # FastAPI TestClient transport
+
+# --- Optional, for going live. None is needed for the demo. -----------------
+# anthropic>=0.69             # vision document parser (F2) + prose tightening (F6)
+# sentence-transformers       # swaps BM25 retrieval for all-MiniLM-L6-v2.
+#                             # NOTE: downloads model weights on first use, so
+#                             # the demo default stays BM25 — see README.
+# gtts                        # network TTS without an API key

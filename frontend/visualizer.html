@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hrin Vidhi — Debt Trap Visualizer</title>
+<link rel="stylesheet" href="/static/luminous.css?v={{ASSET_VERSION}}">
+<style>
+  .widget { max-width: 100%; margin: 0 auto; padding: 24px 20px 32px; }
+  @media (min-width: 768px) { .widget { max-width: 860px; padding: 32px 28px 40px; } }
+
+  .app-header { margin-bottom: 20px; }
+  .app-title {
+    font-size: 22px; font-weight: var(--fw-medium); letter-spacing: -0.3px;
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  }
+  .app-title .devanagari { font-size: 20px; color: var(--on-surface-de-emphasis); }
+  .app-subtitle { font-size: 13px; color: var(--on-surface-de-emphasis); margin-top: 4px; }
+  .app-nav { margin-top: 10px; font-size: 13px; }
+  .app-nav a { color: var(--on-surface-primary); text-decoration: none; }
+  .app-nav a:hover { text-decoration: underline; }
+
+  .summary-section {
+    display: flex; align-items: stretch; justify-content: center;
+    margin: 20px 0 8px; flex-wrap: wrap;
+    background: var(--surface-container); border-radius: 14px; padding: 16px 8px;
+  }
+  .summary-item { text-align: center; flex: 1 1 110px; padding: 4px 10px; min-width: 0; }
+  .summary-divider { width: 1px; background: var(--stroke-default); flex: 0 0 1px; margin: 4px 0; }
+  .summary-val {
+    font-weight: var(--fw-medium); letter-spacing: -0.5px;
+    font-variant-numeric: tabular-nums; transition: color 0.3s;
+    font-size: 21px; line-height: 27px; white-space: nowrap;
+  }
+  .summary-val.negative { color: var(--negative); }
+  .summary-val.positive { color: var(--positive); }
+  .summary-sub { font-size: 12px; color: var(--on-surface-de-emphasis); margin-top: 3px; }
+
+  .verdict {
+    margin: 14px 0 4px; padding: 12px 16px; border-radius: 12px;
+    font-size: 14px; line-height: 1.55;
+    background: var(--surface-container-high);
+    border-left: 3px solid var(--chart-actual);
+  }
+  .verdict strong { font-weight: var(--fw-medium); }
+  .verdict.is-clean { border-left-color: var(--positive); }
+
+  .chart-section { margin-top: 20px; }
+
+  .sliders-section { margin-top: 26px; }
+  .breakdown-title { font-size: 17px; font-weight: var(--fw-medium); margin-bottom: 14px; }
+  .slider-grid { display: grid; grid-template-columns: 1fr; gap: 16px 24px; }
+  @media (min-width: 540px) { .slider-grid { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } }
+  .slider-label { font-size: 13px; color: var(--on-surface-de-emphasis); margin-bottom: 5px; }
+  .slider-control { display: flex; align-items: center; gap: 12px; }
+
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    flex: 1; min-width: 0; height: 3px; background: transparent;
+    border-radius: 999px; outline: none; cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 3px; border-radius: 999px; border: none;
+    background: linear-gradient(to right,
+      var(--on-surface-default) 0%, var(--on-surface-default) var(--progress, 50%),
+      rgba(128,128,128,0.3) var(--progress, 50%), rgba(128,128,128,0.3) 100%);
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 10px; height: 24px; border-radius: 999px;
+    background: var(--surface); border: 3px solid var(--on-surface-default);
+    box-sizing: border-box; margin-top: -10.5px; cursor: pointer;
+  }
+  input[type="range"]::-moz-range-track {
+    height: 3px; border-radius: 999px; border: none;
+    background: linear-gradient(to right,
+      var(--on-surface-default) 0%, var(--on-surface-default) var(--progress, 50%),
+      rgba(128,128,128,0.3) var(--progress, 50%), rgba(128,128,128,0.3) 100%);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 10px; height: 24px; border-radius: 999px;
+    background: var(--surface); border: 3px solid var(--on-surface-default);
+    box-sizing: border-box; cursor: pointer;
+  }
+
+  .slider-value {
+    font-size: 14px; font-weight: var(--fw-medium); font-family: var(--ff-sans);
+    width: 96px; flex-shrink: 0; text-align: right; white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    background: var(--surface-container); color: var(--on-surface-default);
+    padding: 6px 10px; border-radius: 8px;
+    border: 1px solid var(--stroke-default); outline: none;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+  .slider-value:focus { border-color: var(--primary); background: var(--surface); }
+
+  .rate-type-row { margin-top: 18px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .segmented { display: inline-flex; background: var(--surface-container); border-radius: 999px; padding: 3px; }
+  .segmented button {
+    font-family: var(--ff-sans); font-size: 13px; border: none; cursor: pointer;
+    padding: 6px 14px; border-radius: 999px; background: transparent;
+    color: var(--on-surface-de-emphasis); transition: background 0.2s, color 0.2s;
+  }
+  .segmented button[aria-pressed="true"] {
+    background: var(--surface-bright); color: var(--on-surface-default);
+    font-weight: var(--fw-medium); box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  }
+
+  .status { margin-top: 14px; font-size: 13px; min-height: 20px; color: var(--on-surface-de-emphasis); }
+  .status.error { color: var(--negative); }
+  .assumptions { margin-top: 18px; font-size: 12.5px; color: var(--on-surface-de-emphasis); }
+  .assumptions summary { cursor: pointer; font-weight: var(--fw-medium); }
+  .assumptions ul { margin: 8px 0 0 18px; }
+  .assumptions li { margin-bottom: 5px; line-height: 1.5; }
+  .disclaimer { margin-top: 22px; }
+
+  @media (max-width: 480px) {
+    .widget { padding: 16px 14px 24px; }
+    .summary-val { font-size: 17px; line-height: 22px; }
+    .summary-sub { font-size: 11px; }
+    .summary-divider { display: none; }
+    .summary-item { flex-basis: 45%; }
+    .slider-value { width: 84px; padding: 5px 8px; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="widget">
+  <header class="app-header">
+    <div class="app-title">Hrin Vidhi <span class="devanagari">ऋण विधि</span></div>
+    <div class="app-subtitle">
+      What a &ldquo;low interest&rdquo; loan really costs — computed, not estimated.
+    </div>
+    <div class="app-nav"><a href="/">&larr; Back to the assistant</a></div>
+  </header>
+
+  <div class="summary-section" id="summarySection"></div>
+  <div class="verdict" id="verdict"></div>
+
+  <div class="chart-section">
+    <svg id="simChart" xmlns="http://www.w3.org/2000/svg" role="img"
+         aria-label="Cumulative amount repaid over the loan term"></svg>
+    <div class="tooltip" id="chartTooltip"></div>
+  </div>
+  <div class="legend-section" id="legendSection"></div>
+
+  <div class="sliders-section">
+    <div class="breakdown-title">Loan details</div>
+    <div class="slider-grid" id="slidersContainer"></div>
+
+    <div class="rate-type-row">
+      <span class="slider-label" style="margin:0">Interest is quoted as</span>
+      <div class="segmented" id="rateType" role="group" aria-label="Rate type">
+        <button type="button" data-value="flat" aria-pressed="true">Flat</button>
+        <button type="button" data-value="reducing" aria-pressed="false">Reducing balance</button>
+        <button type="button" data-value="unknown" aria-pressed="false">Not stated</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <details class="assumptions">
+    <summary>How these numbers were worked out</summary>
+    <ul id="assumptionsList"></ul>
+  </details>
+
+  <div class="disclaimer">
+    This is information and a draft, not legal advice. Please check your lender on RBI&rsquo;s
+    official list of registered NBFCs, and show this to a lawyer or a free legal aid clinic
+    before you file.
+  </div>
+</div>
+
+<script src="/static/format.js?v={{ASSET_VERSION}}"></script>
+<script src="/static/debt-chart.js?v={{ASSET_VERSION}}"></script>
+<script>
+"use strict";
+
+// No loan mathematics here. Everything on screen comes from /calc/debt-trap.
+
+const PARAMS = [
+  { key: 'principal',        label: 'Loan amount',         value: 80000, min: 5000, max: 500000, step: 1000, format: 'currency' },
+  { key: 'quoted_rate',      label: 'Quoted interest (%)', value: 12,    min: 0,    max: 60,     step: 0.5,  format: 'percent'  },
+  { key: 'tenure_months',    label: 'Tenure (months)',     value: 24,    min: 1,    max: 84,     step: 1,    format: 'months'   },
+  { key: 'processing_fee',   label: 'Processing fee',      value: 3200,  min: 0,    max: 50000,  step: 100,  format: 'currency' },
+  { key: 'other_fees_total', label: 'Other charges',       value: 2150,  min: 0,    max: 50000,  step: 50,   format: 'currency' },
+];
+
+const state = {};
+PARAMS.forEach(p => { state[p.key] = p.value; });
+state.rate_type = 'flat';
+
+let analysis = null;
+let geometry = null;
+
+function fmtParam(value, format) {
+  if (format === 'currency') return inrExact(value);
+  if (format === 'percent') return value + '%';
+  if (format === 'months') return value + (value === 1 ? ' month' : ' months');
+  return String(value);
+}
+
+// --- backend call, debounced (sliders fire continuously while dragging) ---
+let inFlight = null;
+let debounceTimer = null;
+
+function requestAnalysis() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(fetchAnalysis, 90);
+}
+
+async function fetchAnalysis() {
+  // Supersede any request still in flight so a slow response from an older
+  // slider position cannot overwrite a newer one.
+  const token = {};
+  inFlight = token;
+  try {
+    const response = await fetch('/calc/debt-trap', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        principal: state.principal,
+        quoted_rate: state.quoted_rate,
+        tenure_months: state.tenure_months,
+        rate_type: state.rate_type,
+        processing_fee: state.processing_fee,
+        other_fees_total: state.other_fees_total,
+      }),
+    });
+    if (inFlight !== token) return;
+    if (!response.ok) {
+      const detail = await response.json().catch(() => ({}));
+      showStatus(detail.detail ? String(detail.detail) : `Request failed (${response.status})`, true);
+      return;
+    }
+    analysis = await response.json();
+    if (inFlight !== token) return;
+    showStatus('');
+    render();
+  } catch (err) {
+    if (inFlight !== token) return;
+    showStatus('Could not reach the calculator. Is the server running?', true);
+  }
+}
+
+function showStatus(message, isError) {
+  const el = document.getElementById('status');
+  el.textContent = message;
+  el.classList.toggle('error', Boolean(isError));
+}
+
+function renderSummary() {
+  const a = analysis;
+  const items = [
+    { label: 'Principal',         value: inr(a.principal) },
+    { label: 'Advertised rate',   value: pct(a.quoted_rate) },
+    { label: 'True APR (all-in)', value: pct(a.all_in_apr), cls: a.hidden_rate_gap > 0.01 ? 'negative' : 'positive' },
+    { label: 'Total interest',    value: inr(a.total_interest) },
+    { label: 'Hidden extra cost', value: inr(a.hidden_cost_gap), cls: a.hidden_cost_gap > 1 ? 'negative' : 'positive' },
+  ];
+  document.getElementById('summarySection').innerHTML = items.map((item, i) =>
+    (i > 0 ? '<div class="summary-divider"></div>' : '') +
+    `<div class="summary-item">
+       <div class="summary-val ${item.cls || ''}">${item.value}</div>
+       <div class="summary-sub">${item.label}</div>
+     </div>`).join('');
+}
+
+function renderVerdict() {
+  const a = analysis;
+  const el = document.getElementById('verdict');
+  const fees = a.processing_fee + a.other_fees_total;
+
+  // Three genuinely different situations. Blaming the flat-rate method when
+  // the lender quoted reducing balance would be an accusation the numbers do
+  // not support, so the copy branches on the actual cause.
+  const rateIsInflated = a.effective_apr - a.quoted_rate > 0.01;
+  const hasFees = fees > 0.5;
+  const clean = !rateIsInflated && !hasFees;
+  el.classList.toggle('is-clean', clean);
+
+  if (clean) {
+    el.innerHTML = `This quote is what it says it is. At <strong>${pct(a.quoted_rate)}</strong>
+      on the reducing balance your EMI is <strong>${inrExact(a.emi)}</strong>, there are no
+      extra charges, and the true APR matches the advertised rate.`;
+    return;
+  }
+
+  if (!rateIsInflated) {
+    // Deliberately does not name the interest method: at 0%, and on a
+    // one-month term, flat and reducing produce the same EMI, so we cannot
+    // tell them apart and must not assert either.
+    el.innerHTML = `The <strong>${pct(a.quoted_rate)}</strong> rate itself is honest &mdash; your
+      EMI of ${inrExact(a.emi)} is what that rate should produce. But
+      <strong>${inrExact(fees)}</strong> in charges means you received
+      ${inrExact(a.principal - fees)} and repay on ${inrExact(a.principal)}, so the real
+      cost of this loan is <strong>${pct(a.all_in_apr)}</strong>, not ${pct(a.quoted_rate)}.
+      Those charges must be disclosed to you in writing.`;
+    return;
+  }
+
+  const feeClause = hasFees ? ` and ${inrExact(fees)} of charges are counted` : ' is counted';
+  el.innerHTML = `You were told <strong>${pct(a.quoted_rate)}</strong>. You are actually paying
+    <strong>${pct(a.all_in_apr)}</strong> once the flat-rate method${feeClause} &mdash; about
+    <strong>${inrExact(a.hidden_cost_gap)} more</strong> than the same loan at a genuine
+    ${pct(a.quoted_rate)}. Your EMI is ${inrExact(a.emi)}; on a real ${pct(a.quoted_rate)}
+    loan it would have been ${inrExact(a.honest_emi)}.`;
+}
+
+function renderAssumptions() {
+  const entries = [...(analysis.warnings || []), ...(analysis.assumptions || [])];
+  document.getElementById('assumptionsList').innerHTML =
+    entries.map(t => `<li>${escapeHtml(t)}</li>`).join('') +
+    `<li>Effective rate solved numerically from the instalment stream
+        (${analysis.rate_solution.method}, ${analysis.rate_solution.iterations} iterations,
+        residual ${analysis.rate_solution.residual.toExponential(1)}).
+        Nominal APR ${pct(analysis.effective_apr)}; compounded annually that is
+        ${pct(analysis.effective_annual_rate)}.</li>`;
+}
+
+function drawChart() {
+  const svg = document.getElementById('simChart');
+  geometry = renderDebtChart(svg, analysis);
+  renderDebtLegend(document.getElementById('legendSection'), analysis);
+  attachDebtChartHover(
+    svg, document.querySelector('.chart-section'),
+    document.getElementById('chartTooltip'), geometry
+  );
+}
+
+function render() {
+  renderSummary();
+  renderVerdict();
+  drawChart();
+  renderAssumptions();
+}
+
+// --- controls ---
+function updateSliderProgress(el) {
+  const min = parseFloat(el.min) || 0;
+  const max = parseFloat(el.max) || 100;
+  const val = parseFloat(el.value) || 0;
+  el.style.setProperty('--progress', ((val - min) / (max - min)) * 100 + '%');
+}
+
+function renderSliders() {
+  document.getElementById('slidersContainer').innerHTML = PARAMS.map(p => `
+    <div class="slider-row">
+      <label class="slider-label" for="slider-${p.key}">${p.label}</label>
+      <div class="slider-control">
+        <input type="range" id="slider-${p.key}" min="${p.min}" max="${p.max}" step="${p.step}"
+               value="${state[p.key]}" data-param="${p.key}" aria-label="${p.label}">
+        <input type="text" class="slider-value" data-display="${p.key}"
+               value="${fmtParam(state[p.key], p.format)}"
+               inputmode="${p.step < 1 ? 'decimal' : 'numeric'}" aria-label="${p.label} value">
+      </div>
+    </div>`).join('');
+
+  PARAMS.forEach(p => {
+    const slider = document.querySelector(`input[type="range"][data-param="${p.key}"]`);
+    const display = document.querySelector(`[data-display="${p.key}"]`);
+    updateSliderProgress(slider);
+
+    slider.addEventListener('input', () => {
+      state[p.key] = parseFloat(slider.value);
+      updateSliderProgress(slider);
+      if (document.activeElement !== display) display.value = fmtParam(state[p.key], p.format);
+      requestAnalysis();
+    });
+
+    const commit = () => {
+      let v = parseFloat(display.value.replace(/[^0-9.]/g, ''));
+      if (isNaN(v)) v = p.min;
+      v = Math.max(p.min, Math.min(p.max, v));
+      state[p.key] = v;
+      slider.value = v;
+      updateSliderProgress(slider);
+      display.value = fmtParam(v, p.format);
+      requestAnalysis();
+    };
+    display.addEventListener('focus', () => { display.value = state[p.key]; display.select(); });
+    display.addEventListener('blur', commit);
+    display.addEventListener('keydown', e => { if (e.key === 'Enter') display.blur(); });
+  });
+}
+
+document.getElementById('rateType').addEventListener('click', e => {
+  const button = e.target.closest('button');
+  if (!button) return;
+  [...e.currentTarget.querySelectorAll('button')].forEach(b =>
+    b.setAttribute('aria-pressed', String(b === button)));
+  state.rate_type = button.dataset.value;
+  requestAnalysis();
+});
+
+// Colours and geometry both change on these, so redraw.
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (analysis) drawChart();
+});
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => { if (analysis) drawChart(); }, 120);
+});
+
+// Deep link: /visualizer?principal=80000&quoted_rate=12&tenure_months=24
+// lets the chat's "open full visualizer" link carry the borrower's own figures.
+(function applyQueryParams() {
+  const params = new URLSearchParams(location.search);
+  PARAMS.forEach(p => {
+    const raw = params.get(p.key);
+    if (raw === null) return;
+    const v = parseFloat(raw);
+    if (!isNaN(v)) {
+      p.value = Math.max(p.min, Math.min(p.max, v));
+      state[p.key] = p.value;
+    }
+  });
+  const rt = params.get('rate_type');
+  if (['flat', 'reducing', 'unknown'].includes(rt)) {
+    state.rate_type = rt;
+    document.querySelectorAll('#rateType button').forEach(b =>
+      b.setAttribute('aria-pressed', String(b.dataset.value === rt)));
+  }
+})();
+
+renderSliders();
+showStatus('Calculating…');
+fetchAnalysis();
+</script>
+</body>
+</html>

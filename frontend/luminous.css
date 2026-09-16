@@ -1,0 +1,120 @@
+/* ===================================================================
+   Luminous design-system tokens, carried over from the source widget.
+   Shared by the chat app (index.html) and the standalone debt-trap
+   visualizer (visualizer.html) so the two cannot drift apart.
+
+   Only the chart palette roles are reassigned from the original: the
+   "what you actually pay" series takes the negative colour and the
+   honest baseline takes the positive one, so the chart reads correctly
+   before you read the legend.
+   =================================================================== */
+
+:root {
+  --ff-sans: 'Google Sans Flex', 'Google Sans', 'Open Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --ff-mono: 'SF Mono', 'Menlo', monospace;
+  --fw-normal: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+
+  --primary: #3186ff;
+  --on-primary: #ffffff;
+  --primary-container: #dcf1ff;
+  --on-primary-container: #192967;
+  --secondary: #969dff;
+  --tertiary: #0ebc5f;
+
+  --surface: #FAF9F9;
+  --surface-bright: #ffffff;
+  --surface-dim: #f2f0f0;
+  --surface-container: #f2f0f0;
+  --surface-container-high: #e6e6e6;
+  --on-surface-default: #1f1f1f;
+  --on-surface-de-emphasis: #444746;
+  --on-surface-primary: #3186ff;
+
+  --outline: #727676;
+  --outline-variant: #c4c7c5;
+  --stroke-default: #e3e3e3;
+  --positive: #008052;
+  --negative: #de2d29;
+  --warning: #b58900;
+
+  --chart-actual: #de2d29;   /* what the borrower really pays */
+  --chart-honest: #008052;   /* what an honest loan would cost */
+
+  --bubble-bot: #ffffff;
+  --bubble-user: #dcf1ff;
+
+  --radius-bubble: 16px;
+  --radius-card: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #0f0f0f;
+    --surface-bright: #1f1f1f;
+    --surface-dim: #141414;
+    --surface-container: #141414;
+    --surface-container-high: #1c1c1c;
+    --on-surface-default: #ffffff;
+    --on-surface-de-emphasis: #ababab;
+    --on-surface-primary: #9dd2ff;
+    --primary: #9dd2ff;
+    --on-primary: #192967;
+    --primary-container: #1f3b9b;
+    --on-primary-container: #dce4ff;
+    --outline: #9a9b9c;
+    --outline-variant: #4a5050;
+    --stroke-default: #2d2f38;
+    --positive: #0ebc5f;
+    --negative: #ff4c45;
+    --warning: #ffdb0f;
+    --chart-actual: #ff6b66;
+    --chart-honest: #35d68a;
+    --bubble-bot: #1c1c1c;
+    --bubble-user: #1f3b9b;
+  }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--ff-sans);
+  background: var(--surface);
+  color: var(--on-surface-default);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Chart, shared by both pages ---- */
+.chart-section { width: 100%; overflow-x: hidden; position: relative; }
+.chart-section svg { display: block; width: 100%; height: auto; }
+.axis-label, .axis-tick { font-family: var(--ff-sans); fill: var(--on-surface-default); }
+#pathLayer path, .path-layer path {
+  transition: d 0.35s cubic-bezier(0.2, 0, 0, 1), stroke 0.3s ease, fill 0.3s ease;
+}
+
+.legend-section {
+  display: flex; gap: 18px; justify-content: center; margin-top: 12px; flex-wrap: wrap;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12.5px; color: var(--on-surface-de-emphasis);
+}
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+.tooltip {
+  position: absolute; background: var(--surface-bright);
+  border: 1px solid var(--outline-variant); padding: 10px 14px; border-radius: 8px;
+  font-size: 13px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+  pointer-events: none; opacity: 0; transition: opacity 0.15s;
+  z-index: 100; white-space: nowrap; color: var(--on-surface-default); line-height: 1.6;
+}
+.tooltip-value { font-weight: var(--fw-medium); margin-left: 6px; font-variant-numeric: tabular-nums; }
+
+/* ---- Disclaimer, required on every borrower-facing surface ---- */
+.disclaimer {
+  padding: 12px 14px; border-radius: 10px;
+  background: var(--surface-container); border: 1px solid var(--stroke-default);
+  font-size: 12.5px; color: var(--on-surface-de-emphasis); line-height: 1.6;
+}

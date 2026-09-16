@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Hrin Vidhi — ऋण विधि</title>
+<link rel="stylesheet" href="/static/luminous.css?v={{ASSET_VERSION}}">
+<style>
+  html, body { height: 100%; }
+  body { background: var(--surface-dim); }
+
+  .app {
+    display: flex; flex-direction: column;
+    height: 100dvh; max-width: 780px; margin: 0 auto;
+    background: var(--surface); position: relative;
+  }
+  @media (min-width: 800px) {
+    .app { border-left: 1px solid var(--stroke-default); border-right: 1px solid var(--stroke-default); }
+  }
+
+  /* ---- Header ---- */
+  header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    background: var(--surface-bright); border-bottom: 1px solid var(--stroke-default);
+    flex-shrink: 0; z-index: 10;
+  }
+  .brand { flex: 1; min-width: 0; }
+  .brand-title {
+    font-size: 16px; font-weight: var(--fw-medium); letter-spacing: -0.2px;
+    display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  }
+  .brand-title .devanagari { font-size: 15px; color: var(--on-surface-de-emphasis); }
+  .brand-sub {
+    font-size: 11.5px; color: var(--on-surface-de-emphasis);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .lang-select {
+    font-family: var(--ff-sans); font-size: 14px;
+    background: var(--surface-container); color: var(--on-surface-default);
+    border: 1px solid var(--stroke-default); border-radius: 999px;
+    padding: 7px 12px; cursor: pointer; outline: none; flex-shrink: 0;
+  }
+  .icon-btn {
+    background: transparent; border: none; cursor: pointer; flex-shrink: 0;
+    color: var(--on-surface-de-emphasis); font-size: 18px; padding: 6px 8px;
+    border-radius: 8px; line-height: 1;
+  }
+  .icon-btn:hover { background: var(--surface-container); }
+
+  /* ---- Chat ---- */
+  .chat {
+    flex: 1; overflow-y: auto; padding: 16px 14px 8px;
+    display: flex; flex-direction: column; gap: 10px;
+    scroll-behavior: smooth;
+  }
+
+  .row { display: flex; }
+  .row.from-user { justify-content: flex-end; }
+
+  .bubble {
+    max-width: min(86%, 560px); padding: 10px 14px;
+    border-radius: var(--radius-bubble);
+    font-size: 15px; line-height: 1.55; word-wrap: break-word;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.06);
+  }
+  .from-bot .bubble {
+    background: var(--bubble-bot); border-bottom-left-radius: 5px;
+  }
+  .from-user .bubble {
+    background: var(--bubble-user); border-bottom-right-radius: 5px;
+    color: var(--on-primary-container);
+  }
+  @media (prefers-color-scheme: dark) {
+    .from-user .bubble { color: var(--on-primary-container); }
+  }
+  .bubble .native { font-size: 15.5px; }
+  .bubble .translated {
+    margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--stroke-default);
+    font-size: 13px; color: var(--on-surface-de-emphasis); font-style: italic;
+  }
+  .bubble audio { width: 100%; margin-top: 6px; max-width: 320px; }
+  .bubble-note { font-size: 12px; color: var(--on-surface-de-emphasis); margin-top: 6px; }
+
+  /* ---- Rich cards ---- */
+  .card {
+    max-width: min(94%, 620px); background: var(--bubble-bot);
+    border: 1px solid var(--stroke-default); border-radius: var(--radius-card);
+    padding: 14px 16px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07);
+  }
+  .card-title {
+    font-size: 14px; font-weight: var(--fw-medium); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  .facts { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; }
+  .facts dt { color: var(--on-surface-de-emphasis); white-space: nowrap; }
+  .facts dd { font-variant-numeric: tabular-nums; }
+  .facts dd.unknown { color: var(--on-surface-de-emphasis); font-style: italic; }
+
+  .headline {
+    display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 12px;
+  }
+  .headline-item { min-width: 92px; }
+  .headline-val {
+    font-size: 20px; font-weight: var(--fw-medium); letter-spacing: -0.4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .headline-val.bad { color: var(--negative); }
+  .headline-val.good { color: var(--positive); }
+  .headline-sub { font-size: 11.5px; color: var(--on-surface-de-emphasis); }
+
+  .finding { padding: 9px 0; border-top: 1px solid var(--stroke-default); }
+  .finding:first-of-type { border-top: none; padding-top: 2px; }
+  .finding-head { display: flex; align-items: baseline; gap: 8px; }
+  .sev {
+    font-size: 10px; letter-spacing: 0.4px; text-transform: uppercase;
+    font-weight: var(--fw-medium); padding: 2px 7px; border-radius: 999px;
+    flex-shrink: 0; white-space: nowrap;
+  }
+  .sev.critical { background: var(--negative); color: #fff; }
+  .sev.high { background: rgba(222, 45, 41, 0.15); color: var(--negative); }
+  .sev.medium { background: rgba(181, 137, 0, 0.18); color: var(--warning); }
+  .sev.info { background: var(--surface-container-high); color: var(--on-surface-de-emphasis); }
+  .finding-title { font-size: 14px; font-weight: var(--fw-medium); }
+  .finding-body { font-size: 13px; color: var(--on-surface-de-emphasis); margin-top: 4px; line-height: 1.5; }
+  .cite {
+    font-size: 11.5px; color: var(--on-surface-de-emphasis);
+    margin-top: 5px; padding-left: 9px; border-left: 2px solid var(--outline-variant);
+  }
+
+  .card .chart-section { margin-top: 4px; }
+  .card-link {
+    display: inline-block; margin-top: 10px; font-size: 13px;
+    color: var(--on-surface-primary); text-decoration: none;
+  }
+  .card-link:hover { text-decoration: underline; }
+
+  .disclaimer { margin-top: 4px; max-width: min(94%, 620px); }
+
+  .rights-points { margin: 0 0 10px 18px; font-size: 14px; }
+  .rights-points li { margin-bottom: 6px; line-height: 1.5; }
+  .card audio { width: 100%; margin-top: 4px; }
+  .letter-summary { font-size: 14.5px; line-height: 1.6; margin-bottom: 12px; }
+  .letter-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    font-family: var(--ff-sans); font-size: 13.5px; cursor: pointer;
+    border: 1px solid var(--stroke-default); border-radius: 999px;
+    padding: 8px 15px; background: var(--surface-container);
+    color: var(--on-surface-default); text-decoration: none; display: inline-block;
+  }
+  .btn:hover { background: var(--surface-container-high); }
+  .btn.primary { background: var(--primary); color: var(--on-primary); border-color: transparent; }
+  .letter-body {
+    margin-top: 12px; max-height: 340px; overflow: auto;
+    background: var(--surface-container); border-radius: 8px; padding: 12px;
+    font-family: var(--ff-mono); font-size: 11.5px; line-height: 1.55;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .placeholder-note { font-size: 12px; color: var(--on-surface-de-emphasis); margin-top: 8px; }
+
+  /* ---- Typing indicator ---- */
+  .typing { display: flex; gap: 4px; padding: 14px; }
+  .typing span {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--outline);
+    animation: blink 1.3s infinite both;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .typing span { animation: none; opacity: 0.6; } }
+
+  /* ---- Composer ---- */
+  .composer {
+    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    padding: 10px 12px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface-bright); border-top: 1px solid var(--stroke-default);
+    position: relative;
+  }
+  .composer input[type="text"] {
+    flex: 1; min-width: 0; font-family: var(--ff-sans); font-size: 15px;
+    background: var(--surface-container); color: var(--on-surface-default);
+    border: 1px solid var(--stroke-default); border-radius: 999px;
+    padding: 11px 16px; outline: none;
+  }
+  .composer input[type="text"]:focus { border-color: var(--primary); }
+
+  .round-btn {
+    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+    border: none; cursor: pointer; font-size: 19px; line-height: 1;
+    display: grid; place-items: center;
+    background: var(--surface-container); color: var(--on-surface-default);
+    transition: background 0.2s, transform 0.1s;
+  }
+  .round-btn:hover { background: var(--surface-container-high); }
+  .round-btn:active { transform: scale(0.94); }
+  .round-btn.primary { background: var(--primary); color: var(--on-primary); }
+  .round-btn.recording {
+    background: var(--negative); color: #fff;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse { 50% { opacity: 0.65; } }
+  @media (prefers-reduced-motion: reduce) { .round-btn.recording { animation: none; } }
+  .round-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+  .attach-menu {
+    position: absolute; bottom: calc(100% + 8px); left: 12px;
+    background: var(--surface-bright); border: 1px solid var(--stroke-default);
+    border-radius: 12px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
+    overflow: hidden; min-width: 210px; z-index: 20;
+  }
+  .attach-menu button {
+    display: block; width: 100%; text-align: left; border: none; cursor: pointer;
+    background: transparent; color: var(--on-surface-default);
+    font-family: var(--ff-sans); font-size: 14.5px; padding: 12px 16px;
+  }
+  .attach-menu button:hover { background: var(--surface-container); }
+  .attach-menu button + button { border-top: 1px solid var(--stroke-default); }
+
+  .status-line {
+    font-size: 12px; color: var(--on-surface-de-emphasis);
+    text-align: center; padding: 0 14px 6px; min-height: 16px;
+  }
+  .status-line.error { color: var(--negative); }
+
+  .demo-pill {
+    font-size: 10.5px; letter-spacing: 0.3px; text-transform: uppercase;
+    background: var(--surface-container-high); color: var(--on-surface-de-emphasis);
+    padding: 3px 8px; border-radius: 999px; white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="brand-title">
+        Hrin Vidhi <span class="devanagari">ऋण विधि</span>
+        <span class="demo-pill" id="modePill" hidden></span>
+      </div>
+      <div class="brand-sub">Know what your loan really costs, and what they cannot do to you.</div>
+    </div>
+    <!-- autocomplete=off: without it Chrome restores a previously-chosen
+         value on reload, which would silently disagree with `lang`. -->
+    <select class="lang-select" id="langSelect" aria-label="Language" autocomplete="off"></select>
+    <button class="icon-btn" id="eraseBtn" title="Erase this conversation" aria-label="Erase">🗑</button>
+  </header>
+
+  <main class="chat" id="chat" role="log" aria-live="polite"></main>
+
+  <div class="status-line" id="status"></div>
+
+  <div class="composer">
+    <button class="round-btn" id="attachBtn" aria-label="Send a photo">📎</button>
+    <input type="text" id="askInput" autocomplete="off">
+    <button class="round-btn primary" id="micBtn" aria-label="Record">🎤</button>
+    <input type="file" id="fileInput" accept="image/*,application/pdf" hidden>
+  </div>
+</div>
+
+<script src="/static/format.js?v={{ASSET_VERSION}}"></script>
+<script src="/static/i18n.js?v={{ASSET_VERSION}}"></script>
+<script src="/static/debt-chart.js?v={{ASSET_VERSION}}"></script>
+<script>
+"use strict";
+
+// =====================================================================
+// Chat shell. Holds no loan mathematics and no legal reasoning — every
+// number and every finding on screen came from the backend.
+// =====================================================================
+
+let lang = 'mr';               // Marathi: the seeded borrower's language
+
+/* The conversation lives here, in the browser, not on the server.
+   Serverless invocations do not share memory, so a server-side session would
+   vanish mid-demo on a cold start. Every backend route already works
+   statelessly, so the client holds the facts and passes them explicitly. */
+const convo = {
+  transcript: null,
+  loanFacts: null,
+  noticeFacts: null,
+  debtAnalysis: null,
+  report: null,
+  letter: null,
+};
+let recorder = null;
+let recording = false;
+let pendingAttachHint = null;
+
+const chat = document.getElementById('chat');
+const statusEl = document.getElementById('status');
+const micBtn = document.getElementById('micBtn');
+const attachBtn = document.getElementById('attachBtn');
+const askInput = document.getElementById('askInput');
+const fileInput = document.getElementById('fileInput');
+
+// ---------------------------------------------------------------------
+// Rendering
+// ---------------------------------------------------------------------
+
+function scrollDown() {
+  requestAnimationFrame(() => { chat.scrollTop = chat.scrollHeight; });
+}
+
+function addRow(from, node) {
+  const row = document.createElement('div');
+  row.className = `row from-${from}`;
+  row.appendChild(node);
+  chat.appendChild(row);
+  scrollDown();
+  return row;
+}
+
+function bubble(html, from) {
+  const el = document.createElement('div');
+  el.className = 'bubble';
+  el.innerHTML = html;
+  return addRow(from || 'bot', el);
+}
+
+function card(titleHtml, bodyHtml, dotColor, derived) {
+  const el = document.createElement('div');
+  el.className = 'card';
+  const dot = dotColor ? `<span class="dot" style="background:${dotColor}"></span>` : '';
+  el.innerHTML = `<div class="card-title">${dot}${titleHtml}</div>${bodyHtml}`;
+  const row = addRow('bot', el);
+  // Derived cards (cost, compliance) are recomputed from the whole session
+  // every time a document arrives, so the previous copy is superseded rather
+  // than appended to — otherwise the second photo shows the borrower the same
+  // analysis twice.
+  if (derived) row.dataset.derived = '1';
+  return el;
+}
+
+function clearDerivedCards() {
+  document.querySelectorAll('[data-derived]').forEach(el => el.remove());
+}
+
+function showTyping() {
+  const el = document.createElement('div');
+  el.className = 'bubble typing';
+  el.innerHTML = '<span></span><span></span><span></span>';
+  return addRow('bot', el);
+}
+
+function setStatus(message, isError) {
+  statusEl.textContent = message || '';
+  statusEl.classList.toggle('error', Boolean(isError));
+}
+
+function showDisclaimer() {
+  const el = document.createElement('div');
+  el.className = 'disclaimer';
+  el.dataset.derived = '1';
+  el.textContent = DISCLAIMER[lang] || DISCLAIMER.en;
+  chat.appendChild(el);
+  scrollDown();
+}
+
+// ---------------------------------------------------------------------
+// Session
+// ---------------------------------------------------------------------
+
+function eraseConversation() {
+  /* Erase means erase: the borrower's words and papers only ever existed in
+     this tab, so clearing it here is the whole operation. */
+  Object.keys(convo).forEach(k => { convo[k] = null; });
+  chat.innerHTML = '';
+  bubble(escapeHtml(t(lang, 'sessionCleared')));
+  greet();
+}
+
+function greet() {
+  bubble(escapeHtml(t(lang, 'greeting')));
+  setStatus(t(lang, 'recordHint'));
+}
+
+// ---------------------------------------------------------------------
+// F1 — voice
+// ---------------------------------------------------------------------
+
+/** A valid, silent WAV. Used when no microphone is available so the demo
+ *  still completes — the mock discards the audio either way, and the UI
+ *  says plainly that a sample was substituted. */
+function silentWav(seconds) {
+  const rate = 22050;
+  const frames = Math.max(1, Math.floor(rate * seconds));
+  const buffer = new ArrayBuffer(44 + frames * 2);
+  const view = new DataView(buffer);
+  const ascii = (offset, text) => {
+    for (let i = 0; i < text.length; i++) view.setUint8(offset + i, text.charCodeAt(i));
+  };
+  ascii(0, 'RIFF');
+  view.setUint32(4, 36 + frames * 2, true);
+  ascii(8, 'WAVE');
+  ascii(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, rate, true);
+  view.setUint32(28, rate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  ascii(36, 'data');
+  view.setUint32(40, frames * 2, true);
+  return new Blob([buffer], { type: 'audio/wav' });
+}
+
+async function toggleRecording() {
+  if (recording) { stopRecording(); return; }
+
+  if (!navigator.mediaDevices || !window.MediaRecorder) {
+    await sendVoice(silentWav(3), true);
+    return;
+  }
+
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (err) {
+    // Permission denied, or no microphone on the machine. Neither may end
+    // the demo — §1 says the flow must complete regardless.
+    await sendVoice(silentWav(3), true);
+    return;
+  }
+
+  const chunks = [];
+  try {
+    recorder = new MediaRecorder(stream);
+  } catch (err) {
+    stream.getTracks().forEach(track => track.stop());
+    await sendVoice(silentWav(3), true);
+    return;
+  }
+
+  recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  recorder.onstop = async () => {
+    stream.getTracks().forEach(track => track.stop());
+    const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+    // An empty capture (tapped too fast, or a muted device) still has to go
+    // somewhere sensible rather than 422 back at the borrower.
+    await sendVoice(blob.size > 0 ? blob : silentWav(3), blob.size === 0);
+  };
+
+  recorder.start();
+  recording = true;
+  micBtn.classList.add('recording');
+  micBtn.setAttribute('aria-label', 'Stop recording');
+  setStatus(t(lang, 'recording'));
+}
+
+function stopRecording() {
+  recording = false;
+  micBtn.classList.remove('recording');
+  micBtn.setAttribute('aria-label', 'Record');
+  if (recorder && recorder.state !== 'inactive') recorder.stop();
+}
+
+async function sendVoice(blob, substituted) {
+  setStatus(t(lang, 'sending'));
+  micBtn.disabled = true;
+
+  // The borrower's own recording, playable back to them.
+  const url = URL.createObjectURL(blob);
+  bubble(
+    `<div>${escapeHtml(t(lang, 'yourVoiceNote'))}</div>` +
+    `<audio controls preload="metadata" src="${url}"></audio>` +
+    (substituted ? `<div class="bubble-note">${escapeHtml(t(lang, 'micDenied'))}</div>` : ''),
+    'user'
+  );
+
+  const typing = showTyping();
+  try {
+    const form = new FormData();
+    form.append('file', blob, blob.type.includes('wav') ? 'note.wav' : 'note.webm');
+    form.append('language', lang);
+
+    const response = await fetch('/intake/voice', { method: 'POST', body: form });
+    typing.remove();
+    if (!response.ok) { await showError(response); return; }
+
+    const body = await response.json();
+    const transcript = body.transcript;
+    convo.transcript = transcript;
+
+    // Both halves are shown: the native text is what the borrower recognises,
+    // the English is the working copy the analysis reasons over.
+    let html = `<div>${escapeHtml(t(lang, 'heardYou'))}</div>`;
+    html += `<div class="native">${escapeHtml(transcript.native_text)}</div>`;
+    if (transcript.english_text && transcript.english_text !== transcript.native_text) {
+      html += `<div class="translated">${escapeHtml(transcript.english_text)}</div>`;
+    }
+    bubble(html);
+    bubble(escapeHtml(t(lang, 'afterVoice')));
+    setStatus('');
+  } catch (err) {
+    typing.remove();
+    setStatus(t(lang, 'error'), true);
+  } finally {
+    micBtn.disabled = false;
+  }
+}
+
+// ---------------------------------------------------------------------
+// F2/F3 — documents, money math, compliance
+// ---------------------------------------------------------------------
+
+function openAttachMenu() {
+  const existing = document.querySelector('.attach-menu');
+  if (existing) { existing.remove(); return; }
+
+  const menu = document.createElement('div');
+  menu.className = 'attach-menu';
+  menu.innerHTML =
+    `<button data-hint="loan paper">📄 ${escapeHtml(t(lang, 'attachLoan'))}</button>` +
+    `<button data-hint="notice">⚠️ ${escapeHtml(t(lang, 'attachNotice'))}</button>`;
+  document.querySelector('.composer').appendChild(menu);
+
+  menu.addEventListener('click', e => {
+    const button = e.target.closest('button');
+    if (!button) return;
+    pendingAttachHint = button.dataset.hint;
+    menu.remove();
+    fileInput.click();
+  });
+
+  // Dismiss on the next outside click.
+  setTimeout(() => {
+    document.addEventListener('click', function dismiss(e) {
+      if (!menu.contains(e.target) && e.target !== attachBtn) {
+        menu.remove();
+        document.removeEventListener('click', dismiss);
+      }
+    });
+  }, 0);
+}
+
+async function sendDocument(file, hint) {
+  const label = hint === 'notice' ? t(lang, 'attachNotice') : t(lang, 'attachLoan');
+  bubble(`📄 ${escapeHtml(label)}`, 'user');
+  setStatus(t(lang, 'analysing'));
+
+  const typing = showTyping();
+  try {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('hint', hint);
+
+    const response = await fetch('/intake/document', { method: 'POST', body: form });
+    typing.remove();
+    if (!response.ok) { await showError(response); return; }
+
+    const parsed = await response.json();
+
+    // Each photo fills in whichever half of the picture it carries; a second
+    // photo must not erase the first.
+    if (parsed.loan_facts) { convo.loanFacts = parsed.loan_facts; renderLoanFacts(parsed.loan_facts); }
+    if (parsed.notice_facts) { convo.noticeFacts = parsed.notice_facts; renderNoticeFacts(parsed.notice_facts); }
+
+    await runAnalysis();
+    setStatus('');
+  } catch (err) {
+    typing.remove();
+    setStatus(t(lang, 'error'), true);
+  }
+}
+
+/* Re-derive everything from the facts held in this tab. Runs after each
+   document, so the analysis always reflects every paper sent so far. */
+async function runAnalysis() {
+  if (!convo.loanFacts && !convo.noticeFacts) return;
+
+  const response = await fetch('/analysis/compliance', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      loan_facts: convo.loanFacts,
+      notice_facts: convo.noticeFacts,
+      transcript_english: convo.transcript ? convo.transcript.english_text : '',
+    }),
+  });
+  if (!response.ok) { await showError(response); return; }
+  convo.report = await response.json();
+
+  // The chart needs the month-by-month curves, which the compliance route
+  // deliberately does not compute. Ask for them only when there is a loan.
+  convo.debtAnalysis = null;
+  const f = convo.loanFacts;
+  if (f && f.principal && f.quoted_rate !== null && f.tenure_months) {
+    const calc = await fetch('/calc/debt-trap', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        principal: f.principal,
+        quoted_rate: f.quoted_rate,
+        tenure_months: f.tenure_months,
+        rate_type: f.rate_type,
+        processing_fee: f.processing_fee || 0,
+        other_fees_total: (f.other_fees || []).reduce((sum, x) => sum + (x.amount || 0), 0),
+      }),
+    });
+    if (calc.ok) convo.debtAnalysis = await calc.json();
+  }
+
+  clearDerivedCards();
+  if (convo.debtAnalysis) renderDebtCard(convo.debtAnalysis);
+  if (convo.report) renderCompliance(convo.report);
+  showDisclaimer();
+  // F4 then F6. Sequential, not parallel: the borrower should hear what is
+  // wrong before being handed the letter about it.
+  await renderRights();
+  await renderLetter();
+}
+
+
+function fact(label, value, unknownText) {
+  const missing = value === null || value === undefined || value === '';
+  return `<dt>${escapeHtml(label)}</dt>` +
+    `<dd class="${missing ? 'unknown' : ''}">${escapeHtml(missing ? (unknownText || 'not stated') : value)}</dd>`;
+}
+
+function renderLoanFacts(f) {
+  const rateType = { flat: 'flat', reducing: 'reducing balance', unknown: 'not stated' }[f.rate_type];
+  const fees = (f.other_fees || []).reduce((sum, x) => sum + (x.amount || 0), 0);
+  const body = '<dl class="facts">' +
+    fact('Lender', f.lender_name) +
+    fact('Amount', f.principal !== null ? inrExact(f.principal) : null) +
+    fact('Interest', f.quoted_rate !== null ? `${f.quoted_rate}% ${rateType}` : null) +
+    fact('Tenure', f.tenure_months ? `${f.tenure_months} months` : null) +
+    fact('EMI', f.emi !== null ? inrExact(f.emi) : null) +
+    fact('Processing fee', f.processing_fee !== null ? inrExact(f.processing_fee) : null) +
+    (fees ? fact('Other charges', inrExact(fees)) : '') +
+    fact('Penalty', f.penalty_rate !== null
+      ? `${f.penalty_rate}% ${(f.penalty_rate_basis || '').replace('_', ' ')}` : null) +
+    fact('RBI registration', f.nbfc_registration_no, 'none on the document') +
+    '</dl>';
+  card(escapeHtml(t(lang, 'loanFacts')), body, 'var(--primary)');
+}
+
+function renderNoticeFacts(n) {
+  const kind = {
+    recovery: 'Recovery notice',
+    court_notice_claim: 'Headed as a court notice',
+    cheque_bounce: 'Cheque bounce notice',
+    legal_demand: 'Legal demand',
+    unknown: 'Notice',
+  }[n.notice_type] || 'Notice';
+
+  let body = '<dl class="facts">' +
+    fact('From', n.sender) +
+    fact('Type', kind) +
+    fact('Demanded', n.demand_amount !== null ? inrExact(n.demand_amount) : null) +
+    fact('Deadline', n.deadline_days !== null ? `${n.deadline_days} days` : null) +
+    '</dl>';
+
+  if ((n.contact_times_mentioned || []).length) {
+    body += '<div class="finding-body">Contacts recorded: ' +
+      n.contact_times_mentioned.map(c => escapeHtml(c.time_24h)).join(', ') + '</div>';
+  }
+  card('⚠️ ' + escapeHtml(kind), body, 'var(--negative)');
+}
+
+function renderDebtCard(a) {
+  const gapCls = a.hidden_cost_gap > 1 ? 'bad' : 'good';
+  const body =
+    `<div class="headline">
+       <div class="headline-item">
+         <div class="headline-val">${pct(a.quoted_rate)}</div>
+         <div class="headline-sub">They said</div>
+       </div>
+       <div class="headline-item">
+         <div class="headline-val bad">${pct(a.all_in_apr)}</div>
+         <div class="headline-sub">You actually pay</div>
+       </div>
+       <div class="headline-item">
+         <div class="headline-val ${gapCls}">${inr(a.hidden_cost_gap)}</div>
+         <div class="headline-sub">Extra cost</div>
+       </div>
+     </div>
+     <div class="chart-section">
+       <svg class="debt-svg" xmlns="http://www.w3.org/2000/svg" role="img"
+            aria-label="Cumulative amount repaid over the loan term"></svg>
+       <div class="tooltip"></div>
+     </div>
+     <div class="legend-section"></div>`;
+
+  const el = card(escapeHtml(t(lang, 'trueCost')), body, 'var(--chart-actual)', true);
+
+  const svg = el.querySelector('.debt-svg');
+  const geometry = renderDebtChart(svg, a, { compact: true });
+  renderDebtLegend(el.querySelector('.legend-section'), a);
+  attachDebtChartHover(svg, el.querySelector('.chart-section'), el.querySelector('.tooltip'), geometry);
+
+  const query = new URLSearchParams({
+    principal: a.principal, quoted_rate: a.quoted_rate, tenure_months: a.tenure_months,
+    rate_type: a.rate_type, processing_fee: a.processing_fee,
+    other_fees_total: a.other_fees_total,
+  });
+  el.insertAdjacentHTML('beforeend',
+    `<a class="card-link" href="/visualizer?${query}" target="_blank" rel="noopener">
+       ${escapeHtml(t(lang, 'openVisualizer'))} →</a>`);
+
+  // Redraw on resize and theme change — geometry and colours both shift.
+  let timer = null;
+  const redraw = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const g = renderDebtChart(svg, a, { compact: true });
+      renderDebtLegend(el.querySelector('.legend-section'), a);
+      attachDebtChartHover(svg, el.querySelector('.chart-section'), el.querySelector('.tooltip'), g);
+    }, 120);
+  };
+  window.addEventListener('resize', redraw);
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redraw);
+}
+
+function findingHtml(item, severityLabel) {
+  const citations = (item.citations || []).map(c =>
+    `<div class="cite">${escapeHtml(c.source)} — ${escapeHtml(c.citation)}</div>`).join('');
+  const body = item.explanation || item.detail || '';
+  const extra = item.relief_sought || item.action || '';
+  return `<div class="finding">
+    <div class="finding-head">
+      <span class="sev ${item.severity}">${escapeHtml(severityLabel)}</span>
+      <span class="finding-title">${escapeHtml(item.title)}</span>
+    </div>
+    <div class="finding-body">${escapeHtml(item.offending_fact || '')}</div>
+    <div class="finding-body">${escapeHtml(body)}</div>
+    ${extra ? `<div class="finding-body"><strong>Ask for:</strong> ${escapeHtml(extra)}</div>` : ''}
+    ${citations}
+  </div>`;
+}
+
+function renderCompliance(report) {
+  if (report.violations.length) {
+    card(
+      escapeHtml(t(lang, 'whatTheyBroke')),
+      report.violations.map(v => findingHtml(v, t(lang, 'violations'))).join(''),
+      'var(--negative)', true
+    );
+  }
+  if (report.flags.length) {
+    card(
+      escapeHtml(t(lang, 'thingsToCheck')),
+      report.flags.map(f => findingHtml(f, t(lang, 'flags'))).join(''),
+      'var(--warning)', true
+    );
+  }
+  // Anything the engine could not stand behind is surfaced, never dropped.
+  if (report.unconfirmed && report.unconfirmed.length) {
+    card('Could not confirm',
+      report.unconfirmed.map(u => `<div class="finding-body">${escapeHtml(u)}</div>`).join(''),
+      'var(--outline)', true);
+  }
+}
+
+// ---------------------------------------------------------------------
+// F4 — the spoken rights explainer
+// ---------------------------------------------------------------------
+
+/* Ordered BCP-47 preferences for the Web Speech API.
+   Marathi and Bhojpuri fall back to a Hindi voice: neither ships a voice on
+   any common platform, and Hindi reads Devanagari, so the result is accented
+   but intelligible. This is the same compromise the server-side voices make,
+   and `voiceUsed` below reports when a substitute was taken. */
+const SPEECH_TAGS = {
+  hi:  ['hi-IN', 'hi'],
+  mr:  ['mr-IN', 'mr', 'hi-IN', 'hi'],
+  bho: ['bho', 'hi-IN', 'hi'],
+  ta:  ['ta-IN', 'ta'],
+  te:  ['te-IN', 'te'],
+  en:  ['en-IN', 'en-GB', 'en-US', 'en'],
+};
+
+function pickVoice(code) {
+  const voices = window.speechSynthesis.getVoices() || [];
+  const norm = v => v.lang.replace('_', '-');
+  for (const tag of (SPEECH_TAGS[code] || SPEECH_TAGS.en)) {
+    const exact = voices.find(v => norm(v) === tag);
+    if (exact) return exact;
+    const base = voices.find(v => norm(v).split('-')[0] === tag.split('-')[0]);
+    if (base) return base;
+  }
+  return null;
+}
+
+/* Speak the script in the browser. This is what makes the voice note work on
+   a Linux host, where no offline system voice exists — and it sends no audio
+   over the wire at all. */
+function speakInBrowser(text, button) {
+  if (!('speechSynthesis' in window)) return false;
+  const voice = pickVoice(lang);
+  if (!voice) return false;
+
+  const synth = window.speechSynthesis;
+  if (synth.speaking) { synth.cancel(); button.dataset.speaking = ''; return true; }
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.voice = voice;
+  utter.lang = voice.lang;
+  utter.rate = 0.92;                    // a shade slower: this is legal guidance
+  const label = button.textContent;
+  utter.onend = () => { button.textContent = label; button.dataset.speaking = ''; };
+  utter.onerror = utter.onend;
+  button.textContent = '⏹';
+  button.dataset.speaking = '1';
+  synth.speak(utter);
+  return true;
+}
+
+async function renderRights() {
+  try {
+    const response = await fetch('/explain/rights', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ report: convo.report, debt_analysis: convo.debtAnalysis,
+                             language: lang }),
+    });
+    if (!response.ok) return;
+    const rights = await response.json();
+
+    const points = (rights.key_points || [])
+      .map(p => `<li>${escapeHtml(p)}</li>`).join('');
+    let body = points ? `<ul class="rights-points">${points}</ul>` : '';
+
+    const spoken = `${rights.script_native} ${rights.disclaimer_native}`.trim();
+    const note = rights.voice_note;
+    const haveServerAudio = note && note.audio_base64;
+
+    if (haveServerAudio) {
+      // A real recorded/synthesised voice beats the browser's, so prefer it.
+      body += `<div>${escapeHtml(t(lang, 'listenToThis'))}</div>`;
+      body += `<audio controls preload="metadata"
+                 src="data:${note.mime_type};base64,${note.audio_base64}"></audio>`;
+    } else {
+      body += `<div class="letter-actions">
+                 <button class="btn primary" type="button" data-speak>🔊 ${escapeHtml(t(lang, 'listenToThis'))}</button>
+               </div>`;
+    }
+    body += `<div class="placeholder-note">${escapeHtml(rights.disclaimer_native)}</div>`;
+    const el = card(escapeHtml(t(lang, 'yourRights')), body, 'var(--positive)', true);
+
+    const speakBtn = el.querySelector('[data-speak]');
+    if (speakBtn) {
+      speakBtn.addEventListener('click', () => {
+        if (!speakInBrowser(spoken, speakBtn)) {
+          // No voice for this language on this device. Say so rather than
+          // leaving a button that silently does nothing.
+          speakBtn.disabled = true;
+          speakBtn.textContent = '🔇 ' + ((SPEECH_TAGS[lang] || ['en-IN'])[0]);
+        }
+      });
+    }
+  } catch (err) {
+    // The rights card is additive; its absence must not break the thread.
+  }
+}
+
+// ---------------------------------------------------------------------
+// F6 — the grievance letter
+// ---------------------------------------------------------------------
+
+async function renderLetter() {
+  setStatus(t(lang, 'preparingLetter'));
+  try {
+    const response = await fetch('/grievance/draft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ payload: {
+        report: convo.report,
+        loan_facts: convo.loanFacts,
+        notice_facts: convo.noticeFacts,
+        debt_analysis: convo.debtAnalysis,
+        language: lang,
+      } }),
+    });
+    if (!response.ok) { setStatus(''); return; }
+    const letter = await response.json();
+    convo.letter = letter;
+
+    const body =
+      `<div class="letter-summary">${escapeHtml(letter.summary_native)}</div>` +
+      `<div class="letter-actions">
+         <button class="btn primary" type="button" data-download>
+           ${escapeHtml(t(lang, 'downloadLetter'))}</button>
+         <button class="btn" type="button" data-toggle-letter>
+           ${escapeHtml(t(lang, 'showLetter'))}</button>
+       </div>
+       <div class="letter-body" hidden>${escapeHtml(letter.body_english)}</div>
+       <div class="placeholder-note">
+         ${letter.placeholders.length} blank${letter.placeholders.length === 1 ? '' : 's'}
+         to fill in · addressed to ${letter.addressees.map(a => escapeHtml(a.role)).join(' and ')}
+       </div>`;
+
+    const el = card(escapeHtml(t(lang, 'letterReady')), body, 'var(--primary)', true);
+    const toggle = el.querySelector('[data-toggle-letter]');
+    const text = el.querySelector('.letter-body');
+    toggle.addEventListener('click', () => { text.hidden = !text.hidden; });
+    el.querySelector('[data-download]').addEventListener('click', () => downloadLetter(letter));
+    setStatus('');
+  } catch (err) {
+    setStatus('');
+  }
+}
+
+/* Build the file here rather than asking the server for it. The server would
+   need the conversation to do so, and the conversation only exists in this
+   tab — the same reason nothing is stored server-side in the first place. */
+function downloadLetter(letter) {
+  const rule = '-'.repeat(72);
+  const where = letter.addressees
+    .map((a, i) => `${i + 1}. ${a.role}\n${a.address_block}\n\n   Note: ${a.note}`)
+    .join('\n\n');
+  const text =
+    `${letter.body_english}\n\n${rule}\nWHERE TO SEND THIS\n\n${where}\n\n` +
+    `${rule}\n${letter.disclaimer}\n`;
+
+  const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = letter.filename_suggestion || 'grievance-letter.txt';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// ---------------------------------------------------------------------
+// F3 — free-form questions
+// ---------------------------------------------------------------------
+
+async function ask(question) {
+  bubble(escapeHtml(question), 'user');
+  askInput.value = '';
+  const typing = showTyping();
+  try {
+    const response = await fetch('/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question }),
+    });
+    typing.remove();
+    if (!response.ok) { await showError(response); return; }
+
+    const body = await response.json();
+    const citations = (body.citations || []).map(c =>
+      `<div class="cite">${escapeHtml(c.source)} — ${escapeHtml(c.citation)}</div>`).join('');
+    bubble(
+      `<div>${escapeHtml(body.answer).replace(/\n/g, '<br>')}</div>${citations}`
+    );
+  } catch (err) {
+    typing.remove();
+    setStatus(t(lang, 'error'), true);
+  }
+}
+
+// ---------------------------------------------------------------------
+// Wiring
+// ---------------------------------------------------------------------
+
+async function showError(response) {
+  let detail = '';
+  try {
+    const body = await response.json();
+    detail = typeof body.detail === 'string' ? body.detail : '';
+  } catch (err) { /* non-JSON error body */ }
+  setStatus(detail || t(lang, 'error'), true);
+}
+
+function buildLanguageSelect() {
+  const select = document.getElementById('langSelect');
+  select.innerHTML = LANGUAGES.map(l =>
+    `<option value="${l.code}"${l.code === lang ? ' selected' : ''}>${l.name}</option>`).join('');
+
+  // The browser may still restore a value from a previous visit despite
+  // autocomplete=off. Take the control as the source of truth rather than
+  // letting the picker and `lang` drift apart — a borrower would otherwise
+  // see one language selected and be answered in another.
+  select.value = lang;
+  if (select.value !== lang) select.value = lang = 'en';
+
+  select.addEventListener('change', () => {
+    if (select.value === lang) return;
+    lang = select.value;
+    try { localStorage.setItem('hv-lang', lang); } catch (err) { /* private mode */ }
+    askInput.placeholder = t(lang, 'askPlaceholder');
+    setStatus(t(lang, 'recordHint'));
+    bubble(escapeHtml(t(lang, 'greeting')));
+  });
+}
+
+micBtn.addEventListener('click', toggleRecording);
+attachBtn.addEventListener('click', openAttachMenu);
+document.getElementById('eraseBtn').addEventListener('click', eraseConversation);
+
+fileInput.addEventListener('change', () => {
+  const file = fileInput.files && fileInput.files[0];
+  if (file) sendDocument(file, pendingAttachHint || 'loan paper');
+  fileInput.value = '';  // so the same file can be picked again
+});
+
+askInput.addEventListener('keydown', e => {
+  const question = askInput.value.trim();
+  if (e.key === 'Enter' && question.length >= 3) ask(question);
+});
+
+async function showMode() {
+  try {
+    const health = await fetch('/health').then(r => r.json());
+    if (health.demo_mode) {
+      const pill = document.getElementById('modePill');
+      pill.textContent = 'Demo mode · offline';
+      pill.hidden = false;
+    }
+  } catch (err) { /* the banner is cosmetic */ }
+}
+
+(async function init() {
+  // The borrower chose a language on the landing page. Never ask twice.
+  const wanted = new URLSearchParams(location.search).get('lang');
+  if (wanted && STRINGS[wanted]) {
+    lang = wanted;
+  } else {
+    try {
+      const saved = localStorage.getItem('hv-lang');
+      if (saved && STRINGS[saved]) lang = saved;
+    } catch (err) { /* private mode */ }
+  }
+
+  buildLanguageSelect();
+  askInput.placeholder = t(lang, 'askPlaceholder');
+  showMode();
+  greet();
+})();
+</script>
+</body>
+</html>
