@@ -86,6 +86,11 @@ def test_non_english_messages_are_in_their_own_script() -> None:
             if language == "en":
                 continue
             stripped = re.sub(r"\{\w+\}", "", text)
+            # A web address is the one thing that must stay in Latin script: a
+            # borrower has to type cms.rbi.org.in exactly, and transliterating
+            # it into Devanagari would make it unusable. Stripped narrowly, so
+            # any *other* untranslated English still fails this test.
+            stripped = re.sub(r"\b[\w.-]+\.(?:in|org|com|gov)\b", "", stripped)
             latin = [c for c in stripped if "a" <= c.lower() <= "z"]
             assert not latin, f"{key}/{language} contains Latin letters: {latin[:8]}"
 

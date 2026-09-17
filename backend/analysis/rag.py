@@ -20,15 +20,29 @@ import logging
 
 from backend.adapters.base import LLM, AdapterError
 from backend.analysis.citations import to_citation
-from backend.analysis.retriever import get_retriever
+from backend.analysis.retriever import get_retriever, tokenize
+from backend.analysis.vernacular import chunks_for, detect_language, looks_vernacular
+from backend.analysis.vernacular import search as search_vernacular
 from backend.config import get_settings
-from backend.schemas import Citation, RagAnswer
+from backend.explainer.script import disclaimer_for, phrase
+from backend.schemas import Citation, Language, RagAnswer
 
 log = logging.getLogger(__name__)
 
 COULD_NOT_CONFIRM = (
     "I could not find anything in my reference material that answers this reliably, so I "
     "will not guess. Please ask a lawyer or a free legal aid clinic."
+)
+
+#: A different failure from the one above, and it deserves a different answer.
+#: "What should I do?" is every stopword and no subject: retrieval has nothing
+#: to work with, so saying "I could not confirm that" is misleading — there was
+#: no claim to confirm. Ask for the missing noun instead, and show what this
+#: corpus actually covers so the next question can land.
+TOO_VAGUE = (
+    "I need a little more to go on. Try naming the thing you are worried about — a phone "
+    "call, a threat, a court notice, a fee you were not told about, someone taking your "
+    "vehicle, or who the lender really is."
 )
 
 RAG_SYSTEM_PROMPT = """\
@@ -46,11 +60,41 @@ Rules:
 """
 
 
-async def answer_question(question: str, llm: LLM | None = None) -> RagAnswer:
-    """Answer a free-form borrower question, grounded in the corpus."""
-    settings = get_settings()
-    retriever = get_retriever()
+async def answer_question(
+    question: str,
+    llm: LLM | None = None,
+    language: Language = Language.ENGLISH,
+) -> RagAnswer:
+    """Answer a free-form borrower question, grounded in the corpus.
 
+    Two routes, one standard of proof. A question in an Indic script cannot be
+    matched against an English corpus, so it goes through the phrasebook bridge
+    in `vernacular.py`; everything else retrieves directly. Both apply the same
+    score and coverage gates, and both cite real corpus chunks or refuse.
+    """
+    settings = get_settings()
+
+    if looks_vernacular(question) and language is Language.ENGLISH:
+        # The ask box posts the borrower's selected language, but a question in
+        # Devanagari with "English" selected is a real case — someone switched
+        # the picker but kept typing. Trust the script over the dropdown.
+        language = detect_language(question)
+
+    if not tokenize(question):
+        # No usable terms at all. Not the same thing as "nothing matched":
+        # there was no claim to confirm, so asking for a noun beats refusing.
+        log.info("RAG had no searchable terms in %r", question[:80])
+        return RagAnswer(
+            question=question,
+            answer=phrase("ask_too_vague", language) or TOO_VAGUE,
+            citations=[],
+            grounded=False,
+        )
+
+    if looks_vernacular(question):
+        return _answer_vernacular(question, language)
+
+    retriever = get_retriever()
     hits = retriever.search(question, settings.rag_top_k)
 
     # Two independent gates, and both must pass. Score alone is not enough:
@@ -92,6 +136,47 @@ async def answer_question(question: str, llm: LLM | None = None) -> RagAnswer:
 
     polished = await _polish(llm, question, draft, citations)
     return RagAnswer(question=question, answer=polished, citations=citations, grounded=True)
+
+
+def _answer_vernacular(question: str, language: Language) -> RagAnswer:
+    """Answer an Indic-script question from the phrasebook, with citations.
+
+    The LLM is deliberately not invited to polish this. The sentence returned
+    is one a human wrote and reviewed in the borrower's language; handing it to
+    a model with an English editing prompt could only degrade it, and the whole
+    reason this text is pre-written is that no model output in these languages
+    can be checked at request time.
+    """
+    settings = get_settings()
+    matches = search_vernacular(question, language, settings.rag_top_k)
+    if not matches:
+        log.info("RAG (vernacular, %s) declined to answer %r", language.value, question[:80])
+        return RagAnswer(
+            question=question,
+            answer=phrase("ask_not_found", language) or COULD_NOT_CONFIRM,
+            citations=[],
+            grounded=False,
+        )
+
+    # Same relative floor as the English path: answer the question asked, not
+    # every right that shares a word with it.
+    top = matches[0][2]
+    matches = [m for m in matches if m[2] >= top * settings.rag_relative_floor]
+
+    lines: list[str] = []
+    citations: list[Citation] = []
+    for key, sentence, score, _coverage in matches:
+        lines.append(sentence)
+        citations.extend(to_citation(chunk, score=score) for chunk in chunks_for(key))
+
+    lines.append(disclaimer_for(language))
+
+    return RagAnswer(
+        question=question,
+        answer=" ".join(lines),
+        citations=citations,
+        grounded=True,
+    )
 
 
 def _compose(question: str, citations: list[Citation]) -> str:

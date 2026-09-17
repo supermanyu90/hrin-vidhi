@@ -155,7 +155,7 @@ Scroll to **तुमचं तक्रारीचं पत्र**. Click **
 | Voice note doesn't play | Say "the script is on screen" and read a line. The script is always returned even when synthesis fails. |
 | A card is missing | `curl -s localhost:8000/health` on the second screen. `warnings: []` means the pipeline is fine. |
 | Page looks stale after an edit | It shouldn't — asset URLs carry a build stamp. If it does: hard reload (⌘⇧R). |
-| Everything is broken | `pytest -q` — 339 tests, ~10 seconds. It's a strong recovery move in front of judges. |
+| Everything is broken | `pytest -q` — 554 tests, ~10 seconds. It's a strong recovery move in front of judges. |
 
 **Never** run with `DEMO_MODE=false` on stage. There are no keys, so adapters resolve to mocks
 anyway, but `/health` would show a warning and a judge may reasonably ask about it.

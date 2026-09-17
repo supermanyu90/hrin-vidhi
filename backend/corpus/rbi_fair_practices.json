@@ -17,7 +17,7 @@
       "source": "RBI Fair Practices Code / RBI directions on engagement of recovery agents",
       "citation": "RBI Fair Practices Code — recovery shall not involve harassment or intimidation",
       "text": "A lender must not resort to harassment in recovering a loan. This covers persistently bothering the borrower at odd hours, using threats, using abusive or obscene language, using muscle power, and publicly humiliating or shaming the borrower. Recovery agents must be trained to deal with borrowers with civility. A borrower who is behind on payments is still entitled to be treated decently.",
-      "topics": ["harassment", "threats", "intimidation", "abuse", "public shaming", "violence", "agent conduct"],
+      "topics": ["harassment", "threats", "intimidation", "abuse", "public shaming", "violence", "agent conduct", "threatening", "threatened", "threaten", "scaring", "shouting", "abusing", "frightening"],
       "is_summary": true
     },
     {
@@ -26,7 +26,7 @@
       "source": "RBI Fair Practices Code / RBI directions on engagement of recovery agents",
       "citation": "RBI Fair Practices Code — privacy of the borrower and contact with third parties",
       "text": "A lender or its recovery agent must not contact the borrower's relatives, friends, neighbours, colleagues or employer in order to pressure the borrower or to expose the debt. The debt is a matter between the lender and the borrower. Telling a borrower's in-laws about a default, announcing it in the borrower's village, or contacting people from the borrower's phone contacts to shame them, all fall outside what is permitted.",
-      "topics": ["family", "relatives", "neighbours", "employer", "privacy", "public shaming", "contact list", "in-laws"],
+      "topics": ["family", "relatives", "neighbours", "employer", "privacy", "public shaming", "contact list", "in-laws", "boss", "my office", "workplace", "colleagues", "told my neighbours", "calling my family"],
       "is_summary": true
     },
     {
@@ -44,7 +44,7 @@
       "source": "RBI Fair Practices Code",
       "citation": "RBI Fair Practices Code — repossession clause to be in the loan agreement, and its terms",
       "text": "If a lender intends to be able to repossess a financed asset such as a two-wheeler, the loan agreement must contain a repossession clause that is legally enforceable, and the agreement terms must be transparent about notice before repossession, the circumstances in which it may happen, how the borrower may get the asset back, and how it would be sold. Agents cannot simply take a vehicle on the spot because a payment is late, and cannot enter or seize property by force.",
-      "topics": ["repossession", "seizure", "vehicle", "two-wheeler", "notice", "due process", "forcible entry"],
+      "topics": ["repossession", "seizure", "vehicle", "two-wheeler", "notice", "due process", "forcible entry", "bike", "motorcycle", "scooter", "tractor", "car", "take my bike", "taking my vehicle", "towed"],
       "is_summary": true
     },
     {

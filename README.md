@@ -20,7 +20,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
 DEMO_MODE=true python -m backend.main      # → http://127.0.0.1:8000
-pytest -q                                   # 339 tests
+pytest -q                                   # 554 tests
 ```
 
 **No API keys. No network.** That is the point — see below.
@@ -290,6 +290,47 @@ demo means depending on the venue's WiFi. So embeddings are an opt-in upgrade: t
 is constructed with `local_files_only=True` and is **never** allowed to trigger a download at
 request time. A cache miss degrades to BM25 silently.
 
+### Asking in the borrower's own language
+
+The corpus is English. The borrower is not — and a question typed into the ask box in
+Devanagari, Tamil or Telugu used to be refused every single time, in all five languages,
+because the tokenizer matched `[a-z0-9]+` and Indic text tokenised to nothing.
+
+Two things were wrong, and the second is the subtle one. The pattern was ASCII-only; widening
+it to `\w` was not enough either, because a Devanagari vowel sign is a combining mark, which
+`\w` excludes — so `सकाळी` was torn into the fragments `सक` and `ळ`. Tokens now include the
+marks that belong to them, and the nukta is folded so that `फ़ीस` and `फीस` are one word rather
+than two spellings, one of which costs the borrower their answer.
+
+Bridging a vernacular question to an English corpus is the other half. Machine-translating the
+question needs a translator that DEMO_MODE does not have; translating the corpus would mean a
+model writing legal text in five languages that nobody can check. So `analysis/vernacular.py`
+takes the road the explainer already takes — **assembled from pre-translated sentences, not
+generated**. The phrasebook's hand-written sentences are indexed in their own language, and
+each is bound to the corpus chunks that back it. The borrower reads a sentence a human wrote
+in their language; the citation under it points at the English source it came from.
+
+The gates are not relaxed for vernacular queries. Both paths share one scorer
+(`analysis/bm25.py`) precisely so `RAG_MIN_SCORE` and `RAG_MIN_COVERAGE` cannot come to mean
+different things depending on which language was spoken — *"कल क्रिकेट कौन जीता?"* is refused
+exactly as its English twin is, and the refusal is written in the borrower's language too.
+
+**Coverage is at parity with English: all 31 corpus chunks are reachable in all six
+languages**, across 20 concepts — the recovery rules, the money rules, the cheque-bounce
+limits, the consumer forum, and the whole Ombudsman route. `test_every_corpus_chunk_is_
+reachable_in_the_borrowers_language` enforces it: adding a chunk without a phrasebook sentence
+fails the build rather than quietly making that material English-only. Widening the corpus
+means writing the sentence too — a translation review task, not a model task.
+
+One wrinkle worth knowing about. Indexing the answer sentences alone conflated two different
+things: what the borrower *reads* and what the borrower *types*. Closely-related concepts share
+their answer vocabulary almost entirely — "how do I complain to the Ombudsman" and "what can
+the Ombudsman do" are nearly the same bag of words — so the index picked between them at
+random. `_HINTS` fixes that the way the corpus already does with `topics`: a small,
+hand-written list of the words a borrower actually reaches for, indexed alongside the sentence
+at the same field boost. It is populated only where a concept was measurably missed or
+confused; most concepts need none.
+
 ### The corpus
 
 31 chunks in `backend/corpus/`, versioned JSON, covering the five sources §5 names. Every chunk
@@ -442,4 +483,4 @@ fails if any language loses its speech fallback.
 | 6 | F4 rights explainer (TTS) + F6 grievance drafter | done |
 | 7 | `docs/DEMO.md` — scripted 3-minute judge walkthrough | done |
 
-339 tests passing; the full flow completes in `DEMO_MODE` with no keys set.
+554 tests passing; the full flow completes in `DEMO_MODE` with no keys set.

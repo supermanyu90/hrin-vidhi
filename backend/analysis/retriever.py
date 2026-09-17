@@ -21,23 +21,127 @@ either way: below it we say "couldn't confirm" rather than cite something weak.
 from __future__ import annotations
 
 import logging
-import math
 import re
-from collections import Counter
+import unicodedata
 from dataclasses import dataclass
 from functools import lru_cache
 
+from backend.analysis.bm25 import BM25Index
 from backend.analysis.corpus_store import CorpusChunk, load_chunks
 from backend.config import get_settings
 
 log = logging.getLogger(__name__)
 
-_TOKEN_RE = re.compile(r"[a-z0-9]+")
+#: Unicode blocks for the scripts this corpus does NOT contain. A query in one
+#: of these cannot be matched lexically against English chunks, so it takes the
+#: vernacular path instead (see `analysis/vernacular.py`).
+_INDIC_RANGES = (
+    (0x0900, 0x097F),  # Devanagari — Hindi, Marathi, Bhojpuri
+    (0x0B80, 0x0BFF),  # Tamil
+    (0x0C00, 0x0C7F),  # Telugu
+)
+
+#: Combining marks — the vowel signs, viramas and nukta of the Indic scripts.
+#:
+#: These have to be spelled out because `\w` excludes them: a matra is Unicode
+#: category Mn/Mc, which is not alphanumeric, so `\w+` tears a word apart at
+#: every vowel sign. "सकाळी" became the two fragments "सक" and "ळ", which match
+#: nothing and quietly corrupt every Indic token. Built from the ranges above
+#: rather than hard-coded so the two cannot drift apart.
+_MARKS = "".join(
+    chr(cp)
+    for low, high in _INDIC_RANGES
+    for cp in range(low, high + 1)
+    if unicodedata.category(chr(cp)) in ("Mn", "Mc")
+)
+
+#: A token is a run of word characters *plus* the marks that belong to them.
+#: The previous `[a-z0-9]+` matched ASCII only, so a question asked in the
+#: borrower's own language tokenised to nothing and was refused every time.
+_TOKEN_RE = re.compile(rf"[\w{re.escape(_MARKS)}]+", re.UNICODE)
+
+
+def is_indic(text: str) -> bool:
+    """True when the text is written in a script the English corpus lacks."""
+    return any(any(low <= ord(ch) <= high for low, high in _INDIC_RANGES) for ch in text)
+
 
 # Words carrying no retrieval signal in a corpus that is entirely about lending
 # and complaints. Deliberately short: over-pruning hurts a corpus this small.
 _STOPWORDS = frozenset(
-    ["a", "an", "and", "are", "as", "at", "be", "been", "but", "by", "can", "cannot", "did", "do", "does", "for", "from", "had", "has", "have", "he", "her", "him", "his", "how", "i", "if", "in", "into", "is", "it", "its", "me", "my", "no", "nor", "not", "of", "on", "or", "our", "out", "she", "should", "so", "than", "that", "the", "their", "them", "then", "there", "these", "they", "this", "to", "was", "we", "were", "what", "when", "where", "which", "who", "whom", "why", "will", "with", "would", "you", "your"]
+    [
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "at",
+        "be",
+        "been",
+        "but",
+        "by",
+        "can",
+        "cannot",
+        "did",
+        "do",
+        "does",
+        "for",
+        "from",
+        "had",
+        "has",
+        "have",
+        "he",
+        "her",
+        "him",
+        "his",
+        "how",
+        "i",
+        "if",
+        "in",
+        "into",
+        "is",
+        "it",
+        "its",
+        "me",
+        "my",
+        "no",
+        "nor",
+        "not",
+        "of",
+        "on",
+        "or",
+        "our",
+        "out",
+        "she",
+        "should",
+        "so",
+        "than",
+        "that",
+        "the",
+        "their",
+        "them",
+        "then",
+        "there",
+        "these",
+        "they",
+        "this",
+        "to",
+        "was",
+        "we",
+        "were",
+        "what",
+        "when",
+        "where",
+        "which",
+        "who",
+        "whom",
+        "why",
+        "will",
+        "with",
+        "would",
+        "you",
+        "your",
+    ]
 )
 
 
@@ -53,6 +157,14 @@ _SUFFIX_RULES: tuple[tuple[str, str, int], ...] = (
 
 
 def _stem(token: str) -> str:
+    """Suffix stripping for English. Indic tokens are returned unchanged —
+    the rules below encode English morphology and would mangle them."""
+    if is_indic(token):
+        return token
+    return _stem_english(token)
+
+
+def _stem_english(token: str) -> str:
     """Crude suffix stripping so call/calls/called and charge/charges match.
 
     Not a linguistically correct stemmer and it does not try to be: the only
@@ -70,10 +182,23 @@ def _stem(token: str) -> str:
     return token
 
 
+#: The nukta, U+093C. Devanagari writes several sounds two ways — क़/क, फ़/फ,
+#: ज़/ज — and borrowers type whichever their keyboard offers. Folding the nukta
+#: away means "फ़ीस" in the phrasebook and "फीस" as typed are the same token,
+#: instead of one costing the borrower their answer.
+_NUKTA = "\u093c"
+
+
+def normalize(text: str) -> str:
+    """Canonical form for matching: decompose, drop the nukta, recompose."""
+    decomposed = unicodedata.normalize("NFD", text)
+    return unicodedata.normalize("NFC", decomposed.replace(_NUKTA, ""))
+
+
 def tokenize(text: str) -> list[str]:
     return [
         _stem(t)
-        for t in _TOKEN_RE.findall(text.lower())
+        for t in _TOKEN_RE.findall(normalize(text).lower())
         if t not in _STOPWORDS and len(t) > 1
     ]
 
@@ -98,69 +223,29 @@ class BM25Retriever:
 
     name = "bm25"
 
-    K1 = 1.5
-    B = 0.75
     #: Title and topic terms count this many times a body term.
     FIELD_BOOST = 3
 
     def __init__(self, chunks: tuple[CorpusChunk, ...]) -> None:
         self.chunks = chunks
-        self._docs: list[list[str]] = []
-        self._freqs: list[Counter[str]] = []
-        doc_frequency: Counter[str] = Counter()
-
-        for chunk in chunks:
-            boosted = " ".join([chunk.title, " ".join(chunk.topics)] * self.FIELD_BOOST)
-            tokens = tokenize(f"{boosted} {chunk.text}")
-            self._docs.append(tokens)
-            counts = Counter(tokens)
-            self._freqs.append(counts)
-            doc_frequency.update(counts.keys())
-
-        total = max(1, len(chunks))
-        self._avg_len = sum(len(d) for d in self._docs) / total if self._docs else 0.0
-        # Standard BM25 IDF with the +1 guard, so a term in every document
-        # scores ~0 rather than going negative.
-        self._idf = {
-            term: math.log(1 + (total - freq + 0.5) / (freq + 0.5))
-            for term, freq in doc_frequency.items()
-        }
+        self._index: BM25Index[int] = BM25Index(
+            [
+                (
+                    i,
+                    tokenize(
+                        " ".join([chunk.title, " ".join(chunk.topics)] * self.FIELD_BOOST)
+                        + " "
+                        + chunk.text
+                    ),
+                )
+                for i, chunk in enumerate(chunks)
+            ]
+        )
 
     def search(self, query: str, top_k: int) -> list[Retrieved]:
-        terms = tokenize(query)
-        if not terms or not self.chunks:
-            return []
-
-        unique_terms = set(terms)
-        scored: list[tuple[float, float, int]] = []
-        for index, counts in enumerate(self._freqs):
-            length = len(self._docs[index]) or 1
-            score = 0.0
-            matched = 0
-            for term in unique_terms:
-                tf = counts.get(term, 0)
-                if tf == 0:
-                    continue
-                matched += 1
-                idf = self._idf.get(term, 0.0)
-                denominator = tf + self.K1 * (1 - self.B + self.B * length / (self._avg_len or 1))
-                score += idf * (tf * (self.K1 + 1)) / denominator
-            if score > 0:
-                scored.append((score, matched / len(unique_terms), index))
-
-        if not scored:
-            return []
-
-        # Normalise against the theoretical best this query could score, so the
-        # threshold is comparable across queries of different lengths. Using the
-        # observed max instead would make every query's top hit score 1.0.
-        ceiling = sum(self._idf.get(t, 0.0) for t in unique_terms) * (self.K1 + 1) / self.K1
-        ceiling = max(ceiling, 1e-9)
-
-        scored.sort(key=lambda row: (-row[0], row[2]))
         return [
-            Retrieved(chunk=self.chunks[i], score=min(1.0, raw / ceiling), coverage=coverage)
-            for raw, coverage, i in scored[:top_k]
+            Retrieved(chunk=self.chunks[hit.doc_id], score=hit.score, coverage=hit.coverage)
+            for hit in self._index.search(tokenize(query), top_k)
         ]
 
     def describe(self) -> str:
@@ -177,9 +262,7 @@ class EmbeddingRetriever:
 
         self.chunks = chunks
         self._model = SentenceTransformer(model_name, local_files_only=True)
-        corpus = [
-            f"{c.title}. {' '.join(c.topics)}. {c.text}" for c in chunks
-        ]
+        corpus = [f"{c.title}. {' '.join(c.topics)}. {c.text}" for c in chunks]
         self._matrix = self._model.encode(corpus, normalize_embeddings=True)
         self._model_name = model_name
         # Lexical term sets, kept alongside the vectors purely so `coverage`
@@ -239,8 +322,10 @@ def get_retriever():
     settings = get_settings()
     chunks = load_chunks()
     if not chunks:
-        log.warning("Corpus is empty — retrieval will return nothing and every legal "
-                    "claim will be reported as unconfirmed")
+        log.warning(
+            "Corpus is empty — retrieval will return nothing and every legal "
+            "claim will be reported as unconfirmed"
+        )
     embedding = _embedding_retriever_if_cached(chunks, settings.embedding_model)
     return embedding or BM25Retriever(chunks)
 

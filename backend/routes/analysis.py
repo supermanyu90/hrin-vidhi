@@ -17,6 +17,7 @@ from backend.finance import analyse_debt
 from backend.schemas import (
     ComplianceReport,
     DebtAnalysis,
+    Language,
     LoanFacts,
     NoticeFacts,
     RagAnswer,
@@ -79,10 +80,17 @@ async def compliance(
 async def ask(
     request: Request,
     question: str = Body(..., embed=True, min_length=3, max_length=500),
+    language: Language = Body(Language.ENGLISH, embed=True),
 ) -> RagAnswer:
-    """Answer from the corpus, or say plainly that it could not be confirmed."""
+    """Answer from the corpus, or say plainly that it could not be confirmed.
+
+    `language` picks which phrasebook a vernacular question is matched against.
+    It defaults to English so existing callers keep working; a question written
+    in an Indic script is detected and routed on its own even if the caller
+    never sends one.
+    """
     adapters = request.app.state.adapters
-    return await answer_question(question, llm=adapters.llm)
+    return await answer_question(question, llm=adapters.llm, language=language)
 
 
 @router.get("/corpus/status", summary="What the retrieval layer is running on")

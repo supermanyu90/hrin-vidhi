@@ -939,7 +939,9 @@ async function ask(question) {
     const response = await fetch('/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question }),
+      // Send the picked language: it decides which phrasebook a
+      // vernacular question is matched against.
+      body: JSON.stringify({ question, language: lang }),
     });
     typing.remove();
     if (!response.ok) { await showError(response); return; }
