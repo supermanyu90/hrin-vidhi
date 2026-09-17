@@ -18,7 +18,7 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from backend.adapters.base import AdapterError
 from backend.analysis.rules import RuleContext, evaluate
 from backend.finance import analyse_debt
-from backend.privacy import redact
+from backend.privacy import redact, strip_image_metadata
 from backend.schemas import (
     DocumentKind,
     Language,
@@ -196,9 +196,16 @@ async def intake_document(
                    f"{MAX_IMAGE_BYTES // (1024 * 1024)} MB.",
         )
 
+    # Strip EXIF before the bytes can leave this process. A phone photo of a
+    # loan paper carries the GPS coordinates of where it was taken — the
+    # borrower's house — and the document parser may be a third-party API.
+    original_size = len(image)
+    image = strip_image_metadata(image)
+
     log.info(
-        "Parsing document: %d bytes, type=%s, hint=%s",
+        "Parsing document: %d bytes (%d before metadata strip), type=%s, hint=%s",
         len(image),
+        original_size,
         file.content_type or "unknown",
         redact(hint or "none"),
     )

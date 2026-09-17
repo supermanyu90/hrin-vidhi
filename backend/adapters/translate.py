@@ -13,6 +13,7 @@ import logging
 
 from backend.adapters.base import AdapterError, Translator
 from backend.adapters.stt import _load_fixtures
+from backend.adapters.text import split_on_sentences
 from backend.config import Settings
 from backend.schemas import Language, TranslationResult
 
@@ -136,7 +137,7 @@ class SarvamTranslator(Translator):
     ) -> TranslationResult:
         import httpx
 
-        chunks = _chunk(text, self.max_chars)
+        chunks = split_on_sentences(text, self.max_chars)
         out: list[str] = []
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
@@ -162,19 +163,3 @@ class SarvamTranslator(Translator):
             target_language=target,
             provider=self.provider,
         )
-
-
-def _chunk(text: str, limit: int) -> list[str]:
-    """Split on sentence ends, never mid-word, keeping each piece under `limit`."""
-    if len(text) <= limit:
-        return [text]
-    chunks: list[str] = []
-    current = ""
-    for sentence in text.replace("। ", "।|").replace(". ", ".|").split("|"):
-        if len(current) + len(sentence) > limit and current:
-            chunks.append(current.strip())
-            current = ""
-        current += sentence + " "
-    if current.strip():
-        chunks.append(current.strip())
-    return chunks

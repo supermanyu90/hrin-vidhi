@@ -20,7 +20,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
 DEMO_MODE=true python -m backend.main      # → http://127.0.0.1:8000
-pytest -q                                   # 554 tests
+pytest -q                                   # 581 tests
 ```
 
 **No API keys. No network.** That is the point — see below.
@@ -483,4 +483,4 @@ fails if any language loses its speech fallback.
 | 6 | F4 rights explainer (TTS) + F6 grievance drafter | done |
 | 7 | `docs/DEMO.md` — scripted 3-minute judge walkthrough | done |
 
-554 tests passing; the full flow completes in `DEMO_MODE` with no keys set.
+581 tests passing; the full flow completes in `DEMO_MODE` with no keys set.

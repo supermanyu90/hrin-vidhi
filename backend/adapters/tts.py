@@ -26,6 +26,8 @@ import tempfile
 from pathlib import Path
 
 from backend.adapters.base import AdapterError, TextToSpeech
+from backend.adapters.text import split_on_sentences
+from backend.adapters.wav import WavError, duration_seconds, join_wav
 from backend.config import FIXTURES_DIR, Settings
 from backend.schemas import Language, SpeechAudio
 
@@ -163,8 +165,12 @@ class SarvamTextToSpeech(TextToSpeech):
     async def synthesize(self, text: str, language: Language) -> SpeechAudio:
         import httpx
 
-        # Bulbul caps input length, so long scripts come back as several clips.
-        pieces = [text[i : i + self.max_chars] for i in range(0, len(text), self.max_chars)]
+        # Bulbul caps input length, so a full rights script goes as several
+        # clips and comes back as several. ALL of them are kept and joined:
+        # returning only the first truncated the borrower's voice note to
+        # roughly a third of the script and cut off the spoken disclaimer,
+        # which §9 requires them to hear.
+        pieces = split_on_sentences(text, self.max_chars)
         try:
             async with httpx.AsyncClient(timeout=45.0) as client:
                 response = await client.post(
@@ -179,18 +185,44 @@ class SarvamTextToSpeech(TextToSpeech):
                     },
                 )
                 response.raise_for_status()
-                audios = response.json()["audios"]
+                audios = response.json().get("audios") or []
         except Exception as exc:
             raise AdapterError(self.provider, f"synthesis failed: {exc}") from exc
 
-        # Sarvam returns one base64 WAV per input; the first is enough for the
-        # demo. Concatenating WAVs needs header surgery — see README stretch list.
+        if not audios:
+            raise AdapterError(self.provider, "synthesis returned no audio")
+        if len(audios) < len(pieces):
+            # Fewer clips than sentences means part of the script is missing.
+            # Say so rather than handing back a note that stops mid-sentence.
+            log.warning(
+                "Sarvam returned %d clips for %d pieces; the voice note would be "
+                "incomplete", len(audios), len(pieces),
+            )
+
+        try:
+            joined = join_wav([base64.b64decode(a) for a in audios])
+        except (WavError, ValueError) as exc:
+            # A join we cannot do correctly must not become garbled audio in a
+            # borrower's ear. Fall back to the first clip and mark it partial.
+            log.warning("Could not join %d Sarvam clips (%s); sending the first only",
+                        len(audios), exc)
+            return SpeechAudio(
+                language=language,
+                text=text,
+                audio_base64=audios[0],
+                mime_type="audio/wav",
+                duration_seconds=_estimate_duration(text),
+                provider=f"{self.provider}-partial",
+            )
+
         return SpeechAudio(
             language=language,
             text=text,
-            audio_base64=audios[0],
+            audio_base64=base64.b64encode(joined).decode(),
             mime_type="audio/wav",
-            duration_seconds=_estimate_duration(text),
+            # Measured from the audio itself. The character-count estimate was
+            # describing the whole script while only a third of it played.
+            duration_seconds=duration_seconds(joined) or _estimate_duration(text),
             provider=self.provider,
         )
 

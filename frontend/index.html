@@ -537,6 +537,39 @@ function openAttachMenu() {
   }, 0);
 }
 
+// A phone camera writes 4-12 MB JPEGs. Three reasons not to send that:
+// Claude's vision API rejects an image over 5 MB, the upload crawls on a rural
+// 3G connection, and the file carries EXIF GPS — the borrower's house. Drawing
+// through a canvas fixes all three: it re-encodes at a readable size and the
+// canvas keeps no metadata. Falls back to the original file if anything here
+// fails, since the server strips metadata too and a failed resize must not
+// cost the borrower their upload.
+const MAX_EDGE = 1600;
+const JPEG_QUALITY = 0.85;
+
+async function shrinkForUpload(file) {
+  if (!file.type.startsWith('image/')) return file;   // PDFs pass straight through
+  if (!window.createImageBitmap || !HTMLCanvasElement.prototype.toBlob) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+    if (scale === 1 && file.size < 2 * 1024 * 1024) { bitmap.close(); return file; }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', JPEG_QUALITY));
+    if (!blob || blob.size >= file.size) return file;   // no gain; keep the original
+    return new File([blob], 'document.jpg', { type: 'image/jpeg' });
+  } catch (err) {
+    console.warn('Could not resize the photo; sending it as it is.', err);
+    return file;
+  }
+}
+
 async function sendDocument(file, hint) {
   const label = hint === 'notice' ? t(lang, 'attachNotice') : t(lang, 'attachLoan');
   bubble(`📄 ${escapeHtml(label)}`, 'user');
@@ -545,7 +578,7 @@ async function sendDocument(file, hint) {
   const typing = showTyping();
   try {
     const form = new FormData();
-    form.append('file', file);
+    form.append('file', await shrinkForUpload(file));
     form.append('hint', hint);
 
     const response = await fetch('/intake/document', { method: 'POST', body: form });
