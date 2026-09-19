@@ -116,6 +116,36 @@
   }
   .lang:active { transform: scale(.96); }
 
+  /* The fears arrive one at a time and then STAY. A carousel would have been
+     the obvious thing and it is the wrong thing here: this is read slowly, in
+     Devanagari, Tamil and Telugu, by people who may read with difficulty.
+     Text that vanishes mid-sentence makes them race a timer. So it animates
+     in and nothing ever leaves. */
+  .fears {
+    list-style: none; margin: 0 0 18px; padding: 0;
+    display: grid; gap: 7px; max-width: 34ch;
+  }
+  .fears li {
+    font-size: clamp(15px, 3.6vw, 18px); line-height: 1.5;
+    color: var(--paper-dim); padding-left: 17px; position: relative;
+    /* Visible at rest, and `backwards` holds the hidden state only while the
+       delay runs. The first version set opacity:0 here and relied on the
+       animation to reveal it — so anywhere the animation did not run, the
+       hero's main copy simply was not there. Content must never depend on an
+       animation firing to be readable. */
+    opacity: 1;
+    animation: fear-in .5s ease-out backwards;
+  }
+  .fears li::before {
+    content: ""; position: absolute; left: 0; top: .62em;
+    width: 7px; height: 2px; background: var(--vermilion);
+  }
+  @keyframes fear-in { from { opacity: 0; transform: translateY(5px); }
+                       to   { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .fears li { opacity: 1; animation: none; }
+  }
+
   .headline {
     font-family: var(--ui); font-weight: 800;
     font-size: clamp(31px, 8.2vw, 62px); line-height: 1.12;
@@ -326,6 +356,10 @@
       <div class="langs" id="langs" role="group" aria-label="भाषा चुनिए"></div>
     </div>
 
+    <!-- The borrower's own situation, then the turn. Each line is something
+         the corpus can actually answer, so nothing here promises more than
+         the app delivers. -->
+    <ul class="fears" id="fears" aria-label=""></ul>
     <h1 class="headline rise" id="headline" style="animation-delay:.1s"></h1>
     <p class="sub rise" id="sub" style="animation-delay:.15s"></p>
 
@@ -428,8 +462,9 @@
 const HOME = {
   hi: {
     free: 'पूरी तरह मुफ़्त', pick: 'अपनी भाषा चुनिए',
-    headline: 'आपका कर्ज़ असल में <em>कितने का</em> है?',
-    sub: 'बोलिए, कागज़ की फ़ोटो भेजिए। हम आपकी भाषा में बताएँगे।',
+    fears: ['सुबह छह बजे फ़ोन आता है।', 'कहते हैं पड़ोसियों को बता देंगे।', 'कागज़ पर ‘कोर्ट नोटिस’ लिखा है।', 'कहते हैं जेल भिजवा देंगे।', 'और किश्त उससे ज़्यादा है जितना कहा था।'],
+    headline: 'इनमें से ज़्यादातर करने का उन्हें <em>हक़ नहीं</em> है।',
+    sub: 'अपनी भाषा में बोलिए। हम आपके अधिकार बोलकर बताएँगे, और शिकायत का ख़त भी लिख देंगे।',
     cta: 'बोलकर शुरू कीजिए',
     reassure: '<b>वकील नहीं चाहिए.</b> पढ़ना नहीं आता तो भी चलेगा.',
     realCase: 'एक सच्चा उदाहरण',
@@ -460,8 +495,9 @@ const HOME = {
   },
   mr: {
     free: 'पूर्णपणे मोफत', pick: 'तुमची भाषा निवडा',
-    headline: 'तुमचं कर्ज खरंच <em>किती</em> आहे?',
-    sub: 'बोला, कागदाचा फोटो पाठवा. आम्ही तुमच्या भाषेत सांगू.',
+    fears: ['सकाळी सहा वाजता फोन येतो.', 'म्हणतात शेजाऱ्यांना सांगू.', 'कागदावर ‘कोर्ट नोटीस’ लिहिलं आहे.', 'म्हणतात तुरुंगात पाठवू.', 'आणि हप्ता सांगितल्यापेक्षा जास्त आहे.'],
+    headline: 'यातलं बरंचसं करण्याचा त्यांना <em>अधिकार नाही</em>.',
+    sub: 'तुमच्या भाषेत बोला. आम्ही तुमचे हक्क बोलून सांगू, आणि तक्रारीचं पत्रही लिहून देऊ.',
     cta: 'बोलून सुरू करा',
     reassure: '<b>वकील नको.</b> वाचता येत नसेल तरी चालेल.',
     realCase: 'एक खरं उदाहरण',
@@ -492,8 +528,9 @@ const HOME = {
   },
   ta: {
     free: 'முற்றிலும் இலவசம்', pick: 'உங்கள் மொழியைத் தேர்ந்தெடுங்கள்',
-    headline: 'உங்கள் கடன் உண்மையில் <em>எவ்வளவு</em>?',
-    sub: 'பேசுங்கள், ஆவணத்தின் புகைப்படம் அனுப்புங்கள். உங்கள் மொழியில் சொல்கிறோம்.',
+    fears: ['காலை ஆறு மணிக்குத் தொலைபேசி அழைக்கிறது.', 'அண்டை வீட்டாரிடம் சொல்வோம் என்கிறார்கள்.', 'காகிதத்தில் ‘கோர்ட் நோட்டீஸ்’ என்று எழுதியிருக்கிறது.', 'சிறையில் அடைப்போம் என்கிறார்கள்.', 'தவணையும் சொன்னதை விட அதிகம்.'],
+    headline: 'இவற்றில் பெரும்பாலானவற்றைச் செய்ய அவர்களுக்கு <em>உரிமை இல்லை</em>.',
+    sub: 'உங்கள் மொழியில் பேசுங்கள். உங்கள் உரிமைகளை வாய்மொழியாகச் சொல்வோம், புகார் கடிதத்தையும் எழுதித் தருவோம்.',
     cta: 'பேசி ஆரம்பியுங்கள்',
     reassure: '<b>வழக்கறிஞர் தேவையில்லை.</b> படிக்கத் தெரியாவிட்டாலும் பரவாயில்லை.',
     realCase: 'ஒரு உண்மையான உதாரணம்',
@@ -524,8 +561,9 @@ const HOME = {
   },
   te: {
     free: 'పూర్తిగా ఉచితం', pick: 'మీ భాషను ఎంచుకోండి',
-    headline: 'మీ రుణం నిజంగా <em>ఎంత</em>?',
-    sub: 'మాట్లాడండి, పత్రం ఫోటో పంపండి. మీ భాషలో చెబుతాం.',
+    fears: ['ఉదయం ఆరు గంటలకు ఫోన్ వస్తుంది.', 'పొరుగువారికి చెబుతామంటారు.', 'కాగితంపై ‘కోర్టు నోటీసు’ అని రాసి ఉంది.', 'జైలుకు పంపుతామంటారు.', 'వాయిదా కూడా చెప్పిన దానికంటే ఎక్కువ.'],
+    headline: 'వీటిలో చాలావాటిని చేసే <em>హక్కు వాళ్లకు లేదు</em>.',
+    sub: 'మీ భాషలో మాట్లాడండి. మీ హక్కులను చెప్పి వినిపిస్తాం, ఫిర్యాదు లేఖ కూడా రాసి ఇస్తాం.',
     cta: 'మాట్లాడి ప్రారంభించండి',
     reassure: '<b>న్యాయవాది అవసరం లేదు.</b> చదవడం రాకపోయినా ఫర్వాలేదు.',
     realCase: 'ఒక నిజమైన ఉదాహరణ',
@@ -556,8 +594,9 @@ const HOME = {
   },
   bho: {
     free: 'पूरा तरह मुफ्त', pick: 'आपन भाषा चुनीं',
-    headline: 'रउआ के करजा असल में <em>केतना</em> बा?',
-    sub: 'बोलीं, कागज के फोटो भेजीं। हम रउआ के भाषा में बताइब।',
+    fears: ['भोरे छह बजे फोन आवेला।', 'कहेला कि पड़ोसी के बता देब।', 'कागज पर ‘कोर्ट नोटिस’ लिखल बा।', 'कहेला कि जेल भिजवा देब।', 'आ किस्त ओसे जादे बा जेतना कहले रहलें।'],
+    headline: 'इनहन में से जादेतर करे के ओह लोग के <em>हक नइखे</em>।',
+    sub: 'आपन भाषा में बोलीं। हम रउरा अधिकार बोल के बताइब, आ शिकायत के चिट्ठी भी लिख देब।',
     cta: 'बोल के शुरू करीं',
     reassure: '<b>वकील ना चाहीं.</b> पढ़े ना आवे त भी चली.',
     realCase: 'एगो सच्चा उदाहरण',
@@ -588,8 +627,9 @@ const HOME = {
   },
   en: {
     free: 'Completely free', pick: 'Choose your language',
-    headline: 'What is your loan <em>really</em> costing you?',
-    sub: 'Speak. Send a photo of the paper. We answer in your language.',
+    fears: ['The phone rings at six in the morning.', 'They say they will tell your neighbours.', 'The paper says ‘Court Notice’.', 'They say you will be arrested.', 'And the instalment is bigger than you were promised.'],
+    headline: 'They are <em>not allowed</em> to do most of that.',
+    sub: 'Speak in your own language. We will tell you your rights out loud, and write the complaint for you.',
     cta: 'Start by speaking',
     reassure: '<b>No lawyer needed.</b> You do not have to be able to read.',
     realCase: 'A real example',
@@ -640,6 +680,10 @@ function inr(n) {
   return '₹' + abs.toLocaleString('en-IN');
 }
 
+// One source for the motion preference: paint() and animateTo() both need it,
+// and the local const inside animateTo was not visible to paint.
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 function paint() {
   const c = HOME[lang];
   document.documentElement.lang = lang;
@@ -647,6 +691,17 @@ function paint() {
   document.querySelectorAll('[data-t]').forEach(el => {
     const v = c[el.dataset.t];
     if (v) el.textContent = v;
+  });
+
+  // Rebuilt on a language change, so the stagger replays in the new script.
+  const fears = $('fears');
+  fears.innerHTML = '';
+  (c.fears || []).forEach((line, i) => {
+    const li = document.createElement('li');
+    li.textContent = line;
+    // Staggered, but every line is on screen inside two seconds.
+    li.style.animationDelay = reduced ? '0s' : (0.15 + i * 0.4) + 's';
+    fears.appendChild(li);
   });
 
   $('headline').innerHTML = c.headline;
@@ -712,7 +767,6 @@ function buildLangs() {
 /* Count the real rate up from the quoted one. The reveal IS the product:
    the number he was told becoming the number he actually pays. */
 function animateTo(el, from, to, suffix, ms) {
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduced || ms === 0) { el.textContent = to.toFixed(2) + suffix; return; }
   const t0 = performance.now();
   (function step(now) {

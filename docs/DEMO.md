@@ -156,7 +156,7 @@ Scroll to **तुमचं तक्रारीचं पत्र**. Click **
 | A card is missing | `curl -s localhost:8000/health` on the second screen. `warnings: []` means the pipeline is fine. |
 | Page looks stale after an edit | It shouldn't — asset URLs carry a build stamp. If it does: hard reload (⌘⇧R). |
 | The WiFi dies and a live provider starts timing out | `DEMO_MODE=true python -m backend.main` — forces every capability offline. The badge switches to “Fallback” and the whole flow still works. |
-| Everything is broken | `pytest -q` — 611 tests, ~10 seconds. It's a strong recovery move in front of judges. |
+| Everything is broken | `pytest -q` — 613 tests, ~10 seconds. It's a strong recovery move in front of judges. |
 
 **Never** run with `DEMO_MODE=false` on stage. There are no keys, so adapters resolve to mocks
 anyway, but `/health` would show a warning and a judge may reasonably ask about it.

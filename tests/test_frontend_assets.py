@@ -297,3 +297,38 @@ def test_the_stamp_falls_back_to_mtime_for_local_development(monkeypatch) -> Non
     stamp = asset_version()
     assert stamp.startswith(f"{VERSION}-")
     assert stamp != VERSION
+
+
+def test_the_hero_names_the_whole_problem_not_only_the_interest_rate() -> None:
+    """The opening line was "What is your loan really costing you?".
+
+    True, and too narrow. Someone arrives here because the phone rang before
+    dawn, because a letter arrived headed 'Court Notice', because they were
+    told they would be jailed. Money was one fear among several and not
+    usually the one that made them search.
+    """
+    import re
+
+    html = (FRONTEND_DIR / "home.html").read_text(encoding="utf-8")
+    arrays = re.findall(r"fears: \[(.*?)\]", html, re.S)
+    assert len(arrays) == 6, f"every language needs the hero lines, found {len(arrays)}"
+
+    counts = {len(re.findall(r"'(?:[^'\\]|\\.)*'", a)) for a in arrays}
+    assert len(counts) == 1, f"languages disagree on how many lines: {counts}"
+    assert counts.pop() >= 4, "too few to cover more than the money"
+
+
+def test_hero_lines_are_things_the_corpus_can_actually_answer() -> None:
+    """Each line is a promise. The app has to be able to keep it.
+
+    Recovery hours, third-party shaming, a letter headed 'Court Notice',
+    arrest for debt and an understated instalment are all concepts the
+    vernacular layer answers, so none of these lines outruns the product.
+    """
+    from backend.analysis.vernacular import MESSAGE_TO_CHUNKS
+
+    for concept in (
+        "recovery_hours", "third_party", "fake_court_notice",
+        "no_arrest", "hidden_charges",
+    ):
+        assert concept in MESSAGE_TO_CHUNKS, concept
