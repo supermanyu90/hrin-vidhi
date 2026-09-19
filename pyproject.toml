@@ -1,0 +1,14 @@
+# Vercel deployment entrypoint.
+#
+# Vercel detects this as a FastAPI project and looks for a top-level `app`
+# instance. Left to itself it inspects conventional filenames; this points it
+# straight at the real application instead.
+#
+# There used to be an `api/index.py` shim that imported `backend.main` and
+# re-exported `app`. It failed twice: Vercel's detector reads the entrypoint
+# statically, so a shim whose `app` came from an import — and later from
+# inside a try/except — was not recognised as a FastAPI instance, and the
+# build stopped with "does not define a top-level app". Naming the module
+# directly removes the indirection and the failure with it.
+[tool.vercel]
+entrypoint = "backend.main:app"

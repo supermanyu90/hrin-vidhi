@@ -10,11 +10,30 @@ once one is, so what is actually answering is visible on the deployed page.
 
 ---
 
-**Do not pin the Python runtime in `vercel.json`.** The first deploy of this
-project failed with `pin-version-mismatch` because it asked for
-`@vercel/python@5.0.1`, a version that has never been published. Python is an
-officially supported runtime, so `runtime` is optional and exists for
-community runtimes only — omitting it cannot drift out of date.
+**Vercel deploys this as a FastAPI project, not as a bare function.** It looks
+for a top-level `app` instance and `pyproject.toml` names where:
+
+```toml
+[tool.vercel]
+entrypoint = "backend.main:app"
+```
+
+Three things follow from that, each learned from a failed deploy:
+
+- **No `api/index.py` shim.** One used to import `backend.main` and re-export
+  `app`. Vercel's detector reads the entrypoint *statically*, so an `app` that
+  arrives by import is not recognised and the build stops with "does not
+  define a top-level app".
+- **No rewrites.** The framework routes every path into the app. A catch-all
+  rewrite to the old shim is what produced `FUNCTION_INVOCATION_FAILED` on
+  every route, static assets included.
+- **No runtime pin.** The first failure was `pin-version-mismatch` on
+  `@vercel/python@5.0.1`, which has never been published. Python is officially
+  supported, so `runtime` is optional — and a pin that drifts breaks the whole
+  build rather than one request.
+
+The `functions` entry in `vercel.json` is keyed by the **resolved entrypoint**
+(`backend/main.py`), not by any shim.
 
 `requirements.txt` is the serverless bundle and holds runtime dependencies
 only, `google-genai` among them: without the package a `GOOGLE_API_KEY` set in

@@ -58,24 +58,58 @@ def full_report(client: TestClient) -> tuple[dict, dict, dict]:
 # ---------------------------------------------------------------------------
 
 
-def test_the_vercel_entry_point_exposes_the_app() -> None:
-    from api.index import app as vercel_app
+def test_the_declared_entrypoint_is_the_app_we_test() -> None:
+    """Vercel loads whatever `pyproject.toml` names. It must be this app.
+
+    Two builds failed over an `api/index.py` shim that re-exported `app`:
+    Vercel's FastAPI detector reads the entrypoint statically, so an `app`
+    that arrives by import — and later from inside a try/except — was not
+    recognised, and the build stopped with "does not define a top-level app".
+    Naming the real module removed the indirection and both failures.
+    """
+    import tomllib
+
+    config = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text())
+    entrypoint = config["tool"]["vercel"]["entrypoint"]
+    assert entrypoint == "backend.main:app", entrypoint
+
+    module_path, _, attribute = entrypoint.partition(":")
+    module = __import__(module_path, fromlist=[attribute])
     from backend.main import app as local_app
 
-    assert vercel_app is local_app, "the deployed app must be the app we test"
+    assert getattr(module, attribute) is local_app
 
 
-def test_deployment_config_is_present_and_routes_everything() -> None:
+def test_the_entrypoint_module_defines_app_at_the_top_level() -> None:
+    """Statically, the way Vercel's detector reads it — not by importing."""
+    import ast
+
+    tree = ast.parse((PROJECT_ROOT / "backend" / "main.py").read_text())
+    assigned = {
+        target.id
+        for node in tree.body
+        if isinstance(node, ast.Assign)
+        for target in node.targets
+        if isinstance(target, ast.Name)
+    }
+    assert "app" in assigned, (
+        "backend/main.py must assign `app` at module level, or Vercel's FastAPI "
+        "detection fails the build before any code runs"
+    )
+
+
+def test_deployment_config_ships_the_data_files() -> None:
     import json
 
     config = json.loads((PROJECT_ROOT / "vercel.json").read_text())
-    assert config["rewrites"][0]["source"] == "/(.*)"
-    assert config["rewrites"][0]["destination"] == "/api/index"
-    # The corpus, fixtures and frontend must ship with the function or the
-    # deployed app answers with an empty corpus and no pages.
-    included = config["functions"]["api/index.py"]["includeFiles"]
+    # No rewrites: Vercel routes every path into the FastAPI app itself. The
+    # old catch-all pointed at the shim that no longer exists.
+    assert "rewrites" not in config, "the framework handles routing; a rewrite fights it"
+
+    # Keyed on the resolved entrypoint, which is what Vercel configures.
+    fn = config["functions"]["backend/main.py"]
     for needed in ("backend", "frontend", "fixtures"):
-        assert needed in included, needed
+        assert needed in fn["includeFiles"], needed
 
 
 def test_data_files_resolve_independently_of_the_working_directory() -> None:
