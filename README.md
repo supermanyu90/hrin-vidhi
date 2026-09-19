@@ -19,8 +19,8 @@ lender's Nodal Officer and the RBI Ombudsman.
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-DEMO_MODE=true python -m backend.main      # → http://127.0.0.1:8000
-pytest -q                                   # 581 tests
+python -m backend.main                      # → http://127.0.0.1:8000 (no keys needed)
+pytest -q                                   # 585 tests
 ```
 
 **No API keys. No network.** That is the point — see below.
@@ -50,11 +50,28 @@ something breaks on stage, and honest answers to the questions judges ask.
 
 ---
 
-## DEMO_MODE
+## Fallback, and how you can tell
 
-`DEMO_MODE=true` (the default) resolves every external capability to an offline mock backed by
-fixtures. A fresh clone demos before it can fail. Nothing in the borrower flow reaches the
-network, and no key is read.
+The application reaches for a real provider whenever a key is present, and falls back to an
+offline implementation only when one is not. **A fresh clone with no keys still demos** — that
+guarantee now comes from the fallback rather than from a flag, because every `*_PROVIDER` is
+`auto`, which resolves to the offline implementation when nothing else can be constructed.
+
+`DEMO_MODE=true` is the explicit override: force every capability offline even where a key is
+set, for a venue with no WiFi or a deliberately deterministic run. It defaults to **false**.
+
+Nothing about this is silent. Each capability resolves to one of three states — `live` (a real
+provider is answering), `fallback` (none was available) or `forced` (`DEMO_MODE`) — and all
+three are reported at `/health` and shown on a badge in the interface, which opens to say which
+capability is which and why:
+
+```
+GenAI · 3/5          Hearing you          sarvam     sarvam key found
+                     Reading your document fallback  [anthropic] ANTHROPIC_API_KEY is not set
+```
+
+A key that is set but whose SDK is missing resolves to `fallback`, not `live`: an adapter that
+claimed to be live and then degraded on the first real call would make the badge a lie.
 
 The switch is enforced in one place, `backend/adapters/registry.py`, and the registry raises if
 `DEMO_MODE` is on while any real adapter has been selected. `/health` reports exactly what is
@@ -108,12 +125,12 @@ Install only the SDK you use: `anthropic`, or `google-genai`.
 
 Resolution order per capability:
 
-1. `DEMO_MODE=true` → always mock. No exceptions.
+1. `DEMO_MODE=true` → always the offline implementation. No exceptions.
 2. `<NAME>_PROVIDER=<x>` → that provider, and startup **fails loudly** if its key is missing.
    Naming a provider is a claim that it is configured.
-3. `<NAME>_PROVIDER=auto` → the best provider whose credentials are present, else the mock.
-   Init failures here degrade to the mock and surface in `/health.warnings`, so a
-   half-configured `.env` still demos.
+3. `<NAME>_PROVIDER=auto` (the default) → the best provider whose credentials **and SDK** are
+   present, else the offline implementation. Why each candidate was passed over is recorded and
+   shown, so "no key" and "package not installed" are distinguishable at a glance.
 
 **Swapping one mock for the real thing** means adding its key — no code change. To add a *new*
 provider, implement the ABC in `backend/adapters/base.py` and register it in the `builders`
@@ -483,4 +500,4 @@ fails if any language loses its speech fallback.
 | 6 | F4 rights explainer (TTS) + F6 grievance drafter | done |
 | 7 | `docs/DEMO.md` — scripted 3-minute judge walkthrough | done |
 
-581 tests passing; the full flow completes in `DEMO_MODE` with no keys set.
+585 tests passing; the full flow completes in `DEMO_MODE` with no keys set.

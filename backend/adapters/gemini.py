@@ -29,7 +29,7 @@ import json
 import logging
 from typing import Literal
 
-from backend.adapters.base import LLM, AdapterError, DocumentParser
+from backend.adapters.base import LLM, AdapterError, DocumentParser, require_sdk
 from backend.adapters.docparser import VISION_SYSTEM_PROMPT
 from backend.config import Settings
 from backend.schemas import DocumentExtraction, ParsedDocument
@@ -63,6 +63,8 @@ def _output_text(interaction) -> str:
     raise AdapterError("gemini", "no text found on the model response")
 
 
+
+
 class GeminiDocumentParser(DocumentParser):
     """Gemini vision extraction. Requires GOOGLE_API_KEY.
 
@@ -77,6 +79,7 @@ class GeminiDocumentParser(DocumentParser):
     def __init__(self, settings: Settings) -> None:
         if not settings.google_api_key:
             raise AdapterError(self.provider, "GOOGLE_API_KEY is not set", recoverable=False)
+        require_sdk(self.provider, "google.genai", "google-genai")
         self._key = settings.google_api_key
         self._model = settings.google_model
 
@@ -147,6 +150,7 @@ class GeminiLLM(LLM):
     def __init__(self, settings: Settings) -> None:
         if not settings.google_api_key:
             raise AdapterError(self.provider, "GOOGLE_API_KEY is not set", recoverable=False)
+        require_sdk(self.provider, "google.genai", "google-genai")
         self._key = settings.google_api_key
         self._model = settings.google_model
 

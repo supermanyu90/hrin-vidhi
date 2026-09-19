@@ -14,7 +14,7 @@ import logging
 import re
 from typing import Literal
 
-from backend.adapters.base import LLM, AdapterError
+from backend.adapters.base import LLM, AdapterError, require_sdk
 from backend.config import Settings
 
 log = logging.getLogger(__name__)
@@ -72,6 +72,8 @@ class MockLLM(LLM):
         return prompt[index + len(self.DRAFT_MARKER) :].strip() or None
 
 
+
+
 class AnthropicLLM(LLM):
     """Claude completion. Requires ANTHROPIC_API_KEY.
 
@@ -84,6 +86,7 @@ class AnthropicLLM(LLM):
     def __init__(self, settings: Settings) -> None:
         if not settings.anthropic_api_key:
             raise AdapterError(self.provider, "ANTHROPIC_API_KEY is not set", recoverable=False)
+        require_sdk(self.provider, "anthropic", "anthropic")
         self._key = settings.anthropic_api_key
         self._model = settings.anthropic_model
 

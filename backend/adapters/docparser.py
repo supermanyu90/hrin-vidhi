@@ -13,7 +13,7 @@ import json
 import logging
 from functools import lru_cache
 
-from backend.adapters.base import AdapterError, DocumentParser
+from backend.adapters.base import AdapterError, DocumentParser, require_sdk
 from backend.config import FIXTURES_DIR, Settings
 from backend.schemas import DocumentExtraction, ParsedDocument
 
@@ -95,6 +95,8 @@ class MockDocumentParser(DocumentParser):
         return self.LOAN_FIXTURE
 
 
+
+
 class AnthropicDocumentParser(DocumentParser):
     """Claude vision extraction via structured outputs. Requires ANTHROPIC_API_KEY.
 
@@ -109,6 +111,7 @@ class AnthropicDocumentParser(DocumentParser):
     def __init__(self, settings: Settings) -> None:
         if not settings.anthropic_api_key:
             raise AdapterError(self.provider, "ANTHROPIC_API_KEY is not set", recoverable=False)
+        require_sdk(self.provider, "anthropic", "anthropic")
         self._key = settings.anthropic_api_key
         self._model = settings.anthropic_model
         self._effort = settings.anthropic_effort

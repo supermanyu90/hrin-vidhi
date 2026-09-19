@@ -143,4 +143,7 @@ def test_the_recovery_commands_are_real() -> None:
     assert "curl -s localhost:8000/health" in DEMO
     assert "curl -s localhost:8000/corpus/status" in DEMO
     assert "pytest -q" in DEMO
-    assert "DEMO_MODE=true python -m backend.main" in DEMO
+    assert "python -m backend.main" in DEMO
+    # The offline override stays documented: it is the recovery move when a
+    # venue's WiFi dies mid-demo and a live provider starts timing out.
+    assert "DEMO_MODE=true" in DEMO

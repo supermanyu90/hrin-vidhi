@@ -21,7 +21,7 @@ from backend.config import FRONTEND_DIR, VERSION, get_settings
 from backend.privacy import install_redacting_logging
 from backend.routes import analysis as analysis_routes
 from backend.routes import calc, intake, output
-from backend.schemas import HealthResponse
+from backend.schemas import CapabilityState, HealthResponse
 
 log = logging.getLogger(__name__)
 
@@ -92,14 +92,21 @@ def create_app() -> FastAPI:
         from backend.analysis.corpus_store import corpus_chunk_count
 
         warnings = list(adapter_warnings)
-        if not settings.demo_mode and adapters.all_mock:
+        if adapters.mode == "fallback":
             warnings.append(
-                "DEMO_MODE is off but every adapter resolved to a mock — no provider "
-                "keys were found in the environment."
+                "Running entirely on offline fallbacks: no provider key was usable. "
+                "The full borrower flow still works; nothing is calling a model."
             )
         return HealthResponse(
             version=VERSION,
             demo_mode=settings.demo_mode,
+            mode=adapters.mode,
+            live_capabilities=adapters.live_count,
+            total_capabilities=len(adapters.status),
+            capabilities={
+                name: CapabilityState(provider=st.provider, state=st.state, detail=st.detail)
+                for name, st in adapters.status.items()
+            },
             adapters=adapters.describe(),
             corpus_chunks=corpus_chunk_count(),
             warnings=warnings,
@@ -132,7 +139,12 @@ def create_app() -> FastAPI:
         async def visualizer() -> HTMLResponse:
             return render_page("visualizer.html")
 
-    banner = "DEMO MODE — all adapters mocked, no network required" if settings.demo_mode else "LIVE"
+    if adapters.mode == "genai":
+        banner = f"GENAI — {adapters.live_count}/{len(adapters.status)} capabilities live"
+    elif adapters.mode == "forced":
+        banner = "FALLBACK (forced) — DEMO_MODE=true, staying offline on purpose"
+    else:
+        banner = "FALLBACK — no provider key usable; running offline"
     log.info("Hrin Vidhi %s starting [%s] adapters=%s", VERSION, banner, adapters.describe())
     return app
 

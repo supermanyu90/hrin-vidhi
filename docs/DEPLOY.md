@@ -1,8 +1,12 @@
 # Deploying to Vercel
 
 The app ships as a single Python serverless function. It deploys and works
-with **no environment variables at all** — `DEMO_MODE` defaults to true, so a
-fresh deploy runs the seeded story immediately. Real AI is one variable away.
+with **no environment variables at all** — every capability falls back to its
+offline implementation, so a fresh deploy runs the seeded story immediately.
+
+Adding a key is all it takes to go live: there is no flag to flip. The badge in
+the header reads "Fallback" until a provider is configured and "GenAI · n/5"
+once one is, so what is actually answering is visible on the deployed page.
 
 ---
 
@@ -36,7 +40,7 @@ changes.
 
 | Variable | Effect |
 |---|---|
-| `DEMO_MODE` = `false` | Stop forcing mocks; adapters resolve per the keys below. |
+| `DEMO_MODE` = `true` | **Optional.** Forces every capability offline even where a key is set. Leave it unset unless you want a deterministic, no-network deploy. |
 | `ANTHROPIC_API_KEY` | Real Claude vision on photographed loan papers (F2), and prose tightening on the letter (F6). |
 | `GOOGLE_API_KEY` | The same two jobs on Gemini instead. Either provider alone is enough — see the note below. |
 | `SARVAM_API_KEY` | Real Indic speech-to-text, translation and text-to-speech. |

@@ -540,10 +540,33 @@ class VoiceIntakeResponse(StrictModel):
     next_step: str = Field(description="What the UI should prompt for next.")
 
 
+class CapabilityState(StrictModel):
+    """How one capability resolved, and why. Shown in the interface."""
+
+    provider: str = Field(description="The implementation answering, e.g. 'sarvam' or 'mock'.")
+    state: Literal["live", "fallback", "forced"] = Field(
+        description=(
+            "live: a real provider is answering. fallback: none was available. "
+            "forced: DEMO_MODE is on, so it is offline on purpose."
+        )
+    )
+    detail: str = Field(description="Why it resolved this way — the key to read at a demo.")
+
+
 class HealthResponse(StrictModel):
     status: Literal["ok"] = "ok"
     version: str
     demo_mode: bool
+    mode: Literal["genai", "fallback", "forced"] = Field(
+        default="fallback",
+        description="One word for the whole application: genai if any provider is live.",
+    )
+    live_capabilities: int = Field(default=0, ge=0)
+    total_capabilities: int = Field(default=0, ge=0)
+    capabilities: dict[str, CapabilityState] = Field(
+        default_factory=dict,
+        description="Per-capability state, so a fallback is visible rather than silent.",
+    )
     adapters: dict[str, str] = Field(
         description="adapter name -> active implementation, e.g. {'stt': 'mock'}."
     )

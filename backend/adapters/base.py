@@ -124,3 +124,21 @@ class LLM(Adapter):
         effort: Literal["low", "medium", "high"] = "medium",
     ) -> str:
         ...
+
+
+def require_sdk(provider: str, module: str, package: str) -> None:
+    """Fail construction when a provider's SDK is absent.
+
+    The registry reports a constructed adapter as `live`, and the interface
+    shows that to the user. An adapter that constructs without its SDK would
+    claim to be live and then fall back on the first real call — the badge
+    would be lying. Checking the import here keeps the reported state true.
+    """
+    import importlib.util
+
+    if importlib.util.find_spec(module) is None:
+        raise AdapterError(
+            provider,
+            f"the `{package}` package is not installed (pip install {package})",
+            recoverable=False,
+        )

@@ -1,8 +1,18 @@
 """Runtime configuration. The only place environment variables are read.
 
-DEMO_MODE is the load-bearing switch: when true, every adapter resolves to its
-mock implementation and the whole pipeline runs with no keys and no network.
-It defaults to *true* on purpose — a fresh clone must demo before it can fail.
+DEMO_MODE forces every adapter to its offline fallback. It defaults to *false*:
+the application reaches for a real provider whenever a key is present, and
+falls back only when one is not.
+
+A fresh clone still demos with no keys and no network — but that guarantee now
+comes from the fallback itself rather than from the flag. Each `*_PROVIDER` is
+`auto`, which tries the real providers in order and resolves to the mock when
+none can be constructed. Turning DEMO_MODE on is therefore an explicit choice
+("stay offline even though a key is present"), not the default path.
+
+Whichever way each capability resolved is reported at `/health` and shown in
+the interface, so nobody has to guess whether they are watching real inference
+or a fixture.
 """
 
 from __future__ import annotations
@@ -32,8 +42,11 @@ class Settings(BaseSettings):
 
     # -- the switch ---------------------------------------------------------
     demo_mode: bool = Field(
-        default=True,
-        description="True => all adapters are mocks. The demo path. Never needs a key.",
+        default=False,
+        description=(
+            "Force every adapter to its offline fallback, ignoring any key that is "
+            "present. Off by default: absence of a key already produces the fallback."
+        ),
     )
 
     # -- server -------------------------------------------------------------

@@ -228,7 +228,37 @@
     font-size: 10.5px; letter-spacing: 0.3px; text-transform: uppercase;
     background: var(--surface-container-high); color: var(--on-surface-de-emphasis);
     padding: 3px 8px; border-radius: 999px; white-space: nowrap;
+    border: 1px solid transparent; cursor: pointer; font-family: inherit;
   }
+  .demo-pill:hover { border-color: var(--on-surface-de-emphasis); }
+  .demo-pill:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  /* Live inference is the state worth seeing across the room at a demo. */
+  .demo-pill[data-mode="genai"] {
+    background: var(--primary-container); color: var(--primary);
+    font-weight: 700;
+  }
+  .demo-pill[data-mode="genai"]::before { content: "● "; color: var(--tertiary); }
+  .demo-pill[data-mode="fallback"]::before,
+  .demo-pill[data-mode="forced"]::before { content: "○ "; }
+
+  .mode-panel {
+    position: absolute; z-index: 40; margin-top: 6px; max-width: min(92vw, 380px);
+    background: var(--surface-container-high); color: var(--on-surface);
+    border: 1px solid var(--outline-variant, rgba(128,128,128,.3));
+    border-radius: 10px; padding: 12px 14px; font-size: 12px; line-height: 1.5;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18);
+  }
+  .mode-panel h4 { margin: 0 0 8px; font-size: 11px; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--on-surface-de-emphasis); }
+  .mode-row { display: grid; grid-template-columns: auto 1fr; gap: 4px 8px;
+    padding: 5px 0; border-top: 1px solid var(--outline-variant, rgba(128,128,128,.18)); }
+  .mode-row:first-of-type { border-top: 0; }
+  .mode-row b { font-weight: 600; }
+  .mode-row .st { font-size: 10px; text-transform: uppercase; letter-spacing: .06em;
+    align-self: center; }
+  .mode-row .st.live { color: var(--tertiary); }
+  .mode-row .st.fallback, .mode-row .st.forced { color: var(--on-surface-de-emphasis); }
+  .mode-row .why { grid-column: 1 / -1; color: var(--on-surface-de-emphasis); font-size: 11px; }
 </style>
 </head>
 <body>
@@ -238,7 +268,7 @@
     <div class="brand">
       <div class="brand-title">
         Hrin Vidhi <span class="devanagari">ऋण विधि</span>
-        <span class="demo-pill" id="modePill" hidden></span>
+        <button type="button" class="demo-pill" id="modePill" hidden aria-expanded="false" title="What is answering right now"></button>
       </div>
       <div class="brand-sub">Know what your loan really costs, and what they cannot do to you.</div>
     </div>
@@ -1041,15 +1071,75 @@ askInput.addEventListener('keydown', e => {
   if (e.key === 'Enter' && question.length >= 3) ask(question);
 });
 
+// The badge answers the first question anyone watching a demo has: is this
+// real inference, or a fixture? It is always shown — a silent fallback is
+// exactly what it exists to prevent — and opens to say which capability is
+// which, and why.
+let modeHealth = null;
+
+function renderModePanel() {
+  document.getElementById('modePanel')?.remove();
+  if (!modeHealth) return null;
+
+  const panel = document.createElement('div');
+  panel.className = 'mode-panel';
+  panel.id = 'modePanel';
+  const h = document.createElement('h4');
+  h.textContent = modeHealth.mode === 'genai'
+    ? `${modeHealth.live_capabilities} of ${modeHealth.total_capabilities} capabilities live`
+    : 'Running on offline fallbacks';
+  panel.appendChild(h);
+
+  const LABEL = { stt: 'Hearing you', translate: 'Translating',
+                  tts: 'Speaking back', docparser: 'Reading your document',
+                  llm: 'Writing prose' };
+
+  for (const [name, cap] of Object.entries(modeHealth.capabilities || {})) {
+    const row = document.createElement('div');
+    row.className = 'mode-row';
+    const b = document.createElement('b');
+    b.textContent = LABEL[name] || name;
+    const st = document.createElement('span');
+    st.className = 'st ' + cap.state;
+    st.textContent = cap.state === 'live' ? cap.provider : cap.state;
+    const why = document.createElement('span');
+    why.className = 'why';
+    why.textContent = cap.detail;
+    row.append(b, st, why);
+    panel.appendChild(row);
+  }
+  return panel;
+}
+
 async function showMode() {
+  const pill = document.getElementById('modePill');
   try {
-    const health = await fetch('/health').then(r => r.json());
-    if (health.demo_mode) {
-      const pill = document.getElementById('modePill');
-      pill.textContent = 'Demo mode · offline';
-      pill.hidden = false;
+    modeHealth = await fetch('/health').then(r => r.json());
+  } catch (err) {
+    pill.hidden = true;               // cannot report honestly; say nothing
+    return;
+  }
+
+  const mode = modeHealth.mode || 'fallback';
+  pill.dataset.mode = mode;
+  pill.hidden = false;
+  if (mode === 'genai') {
+    pill.textContent = `GenAI · ${modeHealth.live_capabilities}/${modeHealth.total_capabilities}`;
+  } else if (mode === 'forced') {
+    pill.textContent = 'Fallback · offline by choice';
+  } else {
+    pill.textContent = 'Fallback · no keys';
+  }
+
+  pill.onclick = () => {
+    const open = document.getElementById('modePanel');
+    if (open) { open.remove(); pill.setAttribute('aria-expanded', 'false'); return; }
+    const panel = renderModePanel();
+    if (panel) {
+      pill.parentElement.appendChild(panel);
+      pill.setAttribute('aria-expanded', 'true');
     }
-  } catch (err) { /* the banner is cosmetic */ }
+  };
 }
 
 (async function init() {

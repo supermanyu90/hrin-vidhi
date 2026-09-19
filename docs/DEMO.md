@@ -10,7 +10,7 @@ unaffected.
 ```bash
 cd hrin-vidhi
 source .venv/bin/activate
-DEMO_MODE=true python -m backend.main
+python -m backend.main   # no keys needed; the badge will read "Fallback"
 ```
 
 Open **http://127.0.0.1:8000** and check three things:
@@ -155,7 +155,8 @@ Scroll to **तुमचं तक्रारीचं पत्र**. Click **
 | Voice note doesn't play | Say "the script is on screen" and read a line. The script is always returned even when synthesis fails. |
 | A card is missing | `curl -s localhost:8000/health` on the second screen. `warnings: []` means the pipeline is fine. |
 | Page looks stale after an edit | It shouldn't — asset URLs carry a build stamp. If it does: hard reload (⌘⇧R). |
-| Everything is broken | `pytest -q` — 581 tests, ~10 seconds. It's a strong recovery move in front of judges. |
+| The WiFi dies and a live provider starts timing out | `DEMO_MODE=true python -m backend.main` — forces every capability offline. The badge switches to “Fallback” and the whole flow still works. |
+| Everything is broken | `pytest -q` — 585 tests, ~10 seconds. It's a strong recovery move in front of judges. |
 
 **Never** run with `DEMO_MODE=false` on stage. There are no keys, so adapters resolve to mocks
 anyway, but `/health` would show a warning and a judge may reasonably ask about it.

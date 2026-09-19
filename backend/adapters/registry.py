@@ -16,7 +16,7 @@ provider, you want to know it did not load.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import lru_cache
 
 from backend.adapters.base import (
@@ -39,6 +39,27 @@ from backend.config import Settings, get_settings
 log = logging.getLogger(__name__)
 
 
+#: How one capability ended up where it is. Reported at /health and shown in
+#: the interface, because "is this real inference or a fixture?" is the first
+#: question anyone watching a demo actually has.
+LIVE = "live"          # a real provider is answering
+FALLBACK = "fallback"  # wanted a provider, none was available
+FORCED = "forced"      # DEMO_MODE=true: offline on purpose
+
+
+@dataclass(frozen=True, slots=True)
+class CapabilityStatus:
+    """What is answering for one capability, and why."""
+
+    provider: str
+    state: str
+    detail: str
+
+    @property
+    def is_live(self) -> bool:
+        return self.state == LIVE
+
+
 @dataclass(frozen=True, slots=True)
 class AdapterSet:
     """Everything the pipeline needs, resolved once at startup."""
@@ -48,6 +69,7 @@ class AdapterSet:
     tts: TextToSpeech
     docparser: DocumentParser
     llm: LLM
+    status: dict[str, CapabilityStatus] = field(default_factory=dict)
 
     def describe(self) -> dict[str, str]:
         return {
@@ -62,6 +84,22 @@ class AdapterSet:
     def all_mock(self) -> bool:
         return all(a.is_mock for a in (self.stt, self.translate, self.tts, self.docparser, self.llm))
 
+    @property
+    def live_count(self) -> int:
+        return sum(1 for s in self.status.values() if s.is_live)
+
+    @property
+    def mode(self) -> str:
+        """One word for the whole application, for the badge in the interface.
+
+        `genai` the moment any real provider is answering — a demo that is
+        reading a photographed document with a vision model is not in fallback
+        just because its text-to-speech is local.
+        """
+        if self.live_count:
+            return "genai"
+        return "forced" if any(s.state == FORCED for s in self.status.values()) else "fallback"
+
 
 def _resolve(
     name: str,
@@ -71,14 +109,20 @@ def _resolve(
     mock_factory: callable,
     auto_order: list[str],
     warnings: list[str],
+    status: dict[str, CapabilityStatus],
 ) -> Adapter:
+    """Pick the implementation and record, in `status`, how it was picked."""
     choice = choice.strip().lower()
 
+    def record(adapter: Adapter, state: str, detail: str) -> Adapter:
+        status[name] = CapabilityStatus(provider=adapter.provider, state=state, detail=detail)
+        return adapter
+
     if settings.demo_mode:
-        return mock_factory()
+        return record(mock_factory(), FORCED, "DEMO_MODE is on: staying offline on purpose")
 
     if choice == "mock":
-        return mock_factory()
+        return record(mock_factory(), FORCED, f"{name.upper()}_PROVIDER=mock was set explicitly")
 
     if choice != "auto":
         builder = builders.get(choice)
@@ -87,7 +131,11 @@ def _resolve(
                 name, f"unknown provider {choice!r}; known: {sorted(builders)}", recoverable=False
             )
         # Explicit choice: let the error surface rather than silently mocking.
-        return builder(settings)
+        return record(builder(settings), LIVE, f"{choice} was named explicitly")
+
+    # Why each candidate was passed over, so the fallback can say something
+    # more useful than "no key" when the real cause was a missing package.
+    refused: list[str] = []
 
     for candidate in auto_order:
         builder = builders.get(candidate)
@@ -95,24 +143,28 @@ def _resolve(
             continue
         try:
             adapter = builder(settings)
-        except AdapterError:
-            continue  # credentials absent; try the next
+        except AdapterError as exc:
+            # AdapterError already names the provider, so no prefix here.
+            refused.append(str(exc))
+            continue
         except Exception as exc:  # noqa: BLE001
             message = f"{name}: {candidate} failed to initialise ({exc}); falling back"
             log.warning(message)
             warnings.append(message)
             continue
         log.info("%s adapter -> %s", name, candidate)
-        return adapter
+        return record(adapter, LIVE, f"{candidate} key found")
 
     log.info("%s adapter -> mock (no credentials found)", name)
-    return mock_factory()
+    detail = "; ".join(refused) if refused else f"no provider available ({', '.join(auto_order)})"
+    return record(mock_factory(), FALLBACK, detail)
 
 
 def build_adapters(settings: Settings | None = None) -> tuple[AdapterSet, list[str]]:
     """Construct the adapter set. Returns (adapters, warnings-for-/health)."""
     settings = settings or get_settings()
     warnings: list[str] = []
+    status: dict[str, CapabilityStatus] = {}
 
     adapters = AdapterSet(
         stt=_resolve(
@@ -123,6 +175,7 @@ def build_adapters(settings: Settings | None = None) -> tuple[AdapterSet, list[s
             MockSpeechToText,
             ["sarvam", "bhashini"],
             warnings,
+            status,
         ),
         translate=_resolve(
             "translate",
@@ -132,6 +185,7 @@ def build_adapters(settings: Settings | None = None) -> tuple[AdapterSet, list[s
             MockTranslator,
             ["sarvam"],
             warnings,
+            status,
         ),
         tts=_resolve(
             "tts",
@@ -141,6 +195,7 @@ def build_adapters(settings: Settings | None = None) -> tuple[AdapterSet, list[s
             MockTextToSpeech,
             ["sarvam"],  # gtts needs network but no key, so never chosen automatically
             warnings,
+            status,
         ),
         docparser=_resolve(
             "docparser",
@@ -152,6 +207,7 @@ def build_adapters(settings: Settings | None = None) -> tuple[AdapterSet, list[s
             # a complete answer, and naming a provider explicitly overrides this.
             ["anthropic", "gemini"],
             warnings,
+            status,
         ),
         llm=_resolve(
             "llm",
@@ -161,7 +217,9 @@ def build_adapters(settings: Settings | None = None) -> tuple[AdapterSet, list[s
             MockLLM,
             ["anthropic", "gemini"],
             warnings,
+            status,
         ),
+        status=status,
     )
 
     if settings.demo_mode and not adapters.all_mock:  # pragma: no cover - defensive

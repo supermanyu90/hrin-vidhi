@@ -40,14 +40,49 @@ def client() -> TestClient:
 # ---------------------------------------------------------------------------
 
 
-def test_health_reports_all_mocks_in_demo_mode(client: TestClient) -> None:
+def test_health_reports_every_capability_and_how_it_resolved(client: TestClient) -> None:
+    """With no keys the app runs, and says plainly that it is on fallbacks."""
     response = client.get("/health")
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "ok"
-    assert body["demo_mode"] is True
     assert set(body["adapters"]) == {"stt", "translate", "tts", "docparser", "llm"}
     assert all(v == "mock" for v in body["adapters"].values()), body["adapters"]
+
+    # The point of the mode field: a fallback must be visible, not silent.
+    assert body["mode"] == "fallback"
+    assert body["live_capabilities"] == 0
+    assert set(body["capabilities"]) == set(body["adapters"])
+    assert all(c["state"] == "fallback" for c in body["capabilities"].values())
+    # And the reason has to be actionable, not just "mock".
+    assert all(c["detail"] for c in body["capabilities"].values())
+
+
+def test_demo_mode_is_off_unless_asked_for() -> None:
+    """It is an explicit offline switch now, not the default path."""
+    assert Settings().demo_mode is False
+
+
+def test_demo_mode_forces_fallback_even_with_a_key() -> None:
+    adapters, _ = build_adapters(Settings(demo_mode=True, sarvam_api_key="x"))
+    assert adapters.mode == "forced"
+    assert all(s.state == "forced" for s in adapters.status.values())
+    assert adapters.all_mock
+
+
+def test_a_usable_key_puts_the_app_in_genai_mode() -> None:
+    adapters, _ = build_adapters(Settings(demo_mode=False, sarvam_api_key="x"))
+    assert adapters.mode == "genai"
+    assert adapters.status["stt"].state == "live"
+    # Unconfigured capabilities still fall back, and say so.
+    assert adapters.status["docparser"].state == "fallback"
+
+
+def test_a_key_without_its_sdk_does_not_claim_to_be_live() -> None:
+    """Otherwise the badge says GenAI and the first request quietly falls back."""
+    adapters, _ = build_adapters(Settings(demo_mode=False, anthropic_api_key="x"))
+    assert adapters.status["docparser"].state == "fallback"
+    assert "not installed" in adapters.status["docparser"].detail
 
 
 def test_frontend_is_served(client: TestClient) -> None:
@@ -166,7 +201,9 @@ def test_the_mock_never_returns_a_silent_file_pretending_to_be_speech() -> None:
 
 def test_llm_mock_never_invents_content(demo_settings: Settings) -> None:
     adapters, _ = build_adapters(demo_settings)
-    passthrough = asyncio.run(adapters.llm.complete("TASK: rights_script\nDRAFT:\nThey cannot call."))
+    passthrough = asyncio.run(
+        adapters.llm.complete("TASK: rights_script\nDRAFT:\nThey cannot call.")
+    )
     assert passthrough == "They cannot call."
 
     placeholder = asyncio.run(adapters.llm.complete("TASK: rights_script\nNo draft here."))
@@ -269,7 +306,7 @@ def test_redaction_leaves_ordinary_numbers_alone() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_google_key_alone_activates_vision_and_prose() -> None:
+def test_google_key_alone_activates_vision_and_prose(sdks_present) -> None:
     """The whole point of the adapter layer: one key, no code change."""
     settings = Settings(demo_mode=False, google_api_key="g-x")
     adapters, _ = build_adapters(settings)
@@ -277,14 +314,31 @@ def test_google_key_alone_activates_vision_and_prose() -> None:
     assert adapters.llm.provider == "gemini"
 
 
-def test_either_provider_alone_is_a_complete_answer() -> None:
+@pytest.fixture
+def sdks_present(monkeypatch):
+    """Pretend both provider SDKs are installed.
+
+    `require_sdk` deliberately refuses to construct an adapter whose package is
+    missing, so the reported state cannot claim `live` and then fall back. These
+    tests are about which provider gets *selected*, which is independent of what
+    happens to be installed in this environment.
+    """
+    import backend.adapters.docparser as dp
+    import backend.adapters.gemini as gm
+    import backend.adapters.llm as lm
+
+    for module in (dp, gm, lm):
+        monkeypatch.setattr(module, "require_sdk", lambda *a, **k: None)
+
+
+def test_either_provider_alone_is_a_complete_answer(sdks_present) -> None:
     for key, expected in (("anthropic_api_key", "anthropic"), ("google_api_key", "gemini")):
         adapters, _ = build_adapters(Settings(demo_mode=False, **{key: "x"}))
         assert adapters.docparser.provider == expected
         assert adapters.llm.provider == expected
 
 
-def test_a_named_provider_beats_auto_selection() -> None:
+def test_a_named_provider_beats_auto_selection(sdks_present) -> None:
     """With both keys set, the operator still decides."""
     settings = Settings(
         demo_mode=False,
@@ -298,7 +352,7 @@ def test_a_named_provider_beats_auto_selection() -> None:
     assert adapters.llm.provider == "gemini"
 
 
-def test_providers_can_be_mixed() -> None:
+def test_providers_can_be_mixed(sdks_present) -> None:
     """Gemini for vision, Claude for prose, or the other way round."""
     settings = Settings(
         demo_mode=False,
