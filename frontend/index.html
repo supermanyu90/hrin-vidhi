@@ -224,6 +224,8 @@
   }
   .status-line.error { color: var(--negative); }
 
+  .sherni-slot { width: 52px; flex: 0 0 52px; margin-right: 2px; }
+  @media (max-width: 420px) { .sherni-slot { width: 40px; flex-basis: 40px; } }
   .demo-pill {
     font-size: 10.5px; letter-spacing: 0.3px; text-transform: uppercase;
     background: var(--surface-container-high); color: var(--on-surface-de-emphasis);
@@ -265,6 +267,7 @@
 
 <div class="app">
   <header>
+    <div class="sherni-slot" id="sherniSlot"></div>
     <div class="brand">
       <div class="brand-title">
         Hrin Vidhi <span class="devanagari">ऋण विधि</span>
@@ -292,6 +295,7 @@
 
 <script src="/static/format.js?v={{ASSET_VERSION}}"></script>
 <script src="/static/i18n.js?v={{ASSET_VERSION}}"></script>
+<script src="/static/mascot.js?v={{ASSET_VERSION}}"></script>
 <script src="/static/debt-chart.js?v={{ASSET_VERSION}}"></script>
 <script>
 "use strict";
@@ -440,6 +444,7 @@ function silentWav(seconds) {
 
 async function toggleRecording() {
   if (recording) { stopRecording(); return; }
+  sherniSay('mascotListening', 'listening');
 
   if (!navigator.mediaDevices || !window.MediaRecorder) {
     await sendVoice(silentWav(3), true);
@@ -483,6 +488,7 @@ async function toggleRecording() {
 
 function stopRecording() {
   recording = false;
+  if (sherni) sherni.setState('reading');
   micBtn.classList.remove('recording');
   micBtn.setAttribute('aria-label', 'Record');
   if (recorder && recorder.state !== 'inactive') recorder.stop();
@@ -601,6 +607,7 @@ async function shrinkForUpload(file) {
 }
 
 async function sendDocument(file, hint) {
+  sherniSay('mascotReading', 'reading');
   const label = hint === 'notice' ? t(lang, 'attachNotice') : t(lang, 'attachLoan');
   bubble(`📄 ${escapeHtml(label)}`, 'user');
   setStatus(t(lang, 'analysing'));
@@ -905,6 +912,11 @@ async function renderRights() {
     body += `<div class="placeholder-note">${escapeHtml(rights.disclaimer_native)}</div>`;
     const el = card(escapeHtml(t(lang, 'yourRights')), body, 'var(--positive)', true);
 
+    // The one moment she stands up: the borrower now knows what the lender
+    // may not do. Spending the animation only here is what makes it mean
+    // something.
+    if (sherni) sherni.celebrate(t(lang, 'mascotRights'));
+
     const speakBtn = el.querySelector('[data-speak]');
     if (speakBtn) {
       speakBtn.addEventListener('click', () => {
@@ -1111,6 +1123,16 @@ function renderModePanel() {
   return panel;
 }
 
+let sherni = null;
+
+/** Sherni follows the borrower's progress; she never invents one of her own. */
+function sherniSay(key, state) {
+  if (!sherni) return;
+  if (state) sherni.setState(state);
+  const line = t(lang, key);
+  if (line) sherni.say(line);
+}
+
 async function showMode() {
   const pill = document.getElementById('modePill');
   try {
@@ -1156,6 +1178,12 @@ async function showMode() {
 
   buildLanguageSelect();
   askInput.placeholder = t(lang, 'askPlaceholder');
+
+  // She is named for a screen reader here because she carries state the
+  // borrower can act on, unlike on the landing page where she is decoration.
+  sherni = createMascot(document.getElementById('sherniSlot'),
+                        { state: 'waiting', label: t(lang, 'mascotName') });
+
   showMode();
   greet();
 })();

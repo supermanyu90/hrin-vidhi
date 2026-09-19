@@ -129,6 +129,17 @@
 
   /* ── The mic: the one thing to press ──────────────────────────────── */
   .cta-row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  /* Sized against the button, not the page: she introduces the action rather
+     than competing with the headline above it. */
+  .sherni-hero { width: 104px; flex: 0 0 104px; }
+  /* The hero band is --ink, so her outline flips to paper or she vanishes
+     into it. Features stay dark: they sit on her marigold coat, not on the
+     band. */
+  .sherni-hero .sherni-svg {
+    --sh-line: var(--paper); --sh-ink: #101A3D;
+    --sh-mane: var(--marigold); --sh-coat: var(--paper-dim);
+  }
+  @media (max-width: 520px) { .sherni-hero { width: 78px; flex-basis: 78px; } }
   .mic-cta {
     display: inline-flex; align-items: center; gap: 18px;
     background: var(--marigold); color: var(--ink);
@@ -290,6 +301,7 @@
     <p class="sub rise" id="sub" style="animation-delay:.15s"></p>
 
     <div class="cta-row rise" style="animation-delay:.2s">
+      <div class="sherni-hero" id="sherniHero" aria-hidden="true"></div>
       <a class="mic-cta" id="ctaTop" href="/app">
         <span class="mic-ring" aria-hidden="true"><span>🎤</span></span>
         <span data-t="cta">बोलकर शुरू कीजिए</span>
@@ -376,6 +388,7 @@
 </footer>
 
 <script src="/static/i18n.js?v={{ASSET_VERSION}}"></script>
+<script src="/static/mascot.js?v={{ASSET_VERSION}}"></script>
 <script>
 "use strict";
 
@@ -647,7 +660,14 @@ function paint() {
 
   [...$('langs').children].forEach(b =>
     b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+
+  // Her invitation follows the language the borrower just chose.
+  if (heroMascot && typeof STRINGS !== 'undefined' && STRINGS[lang]) {
+    heroMascot.say(STRINGS[lang].mascotGreet, 9000);
+  }
 }
+
+let heroMascot = null;
 
 function buildLangs() {
   $('langs').innerHTML = LANGUAGES.map(l =>
@@ -717,6 +737,11 @@ async function loadRealFigures() {
   if (url && HOME[url]) lang = url;
 
   buildLangs();
+
+  // 'cheer' rather than the chat's calmer 'waiting': this is the one screen
+  // whose whole job is to get a frightened person to press the button.
+  heroMascot = createMascot($('sherniHero'), { state: 'cheer' });
+
   paint();
   loadRealFigures();
 })();

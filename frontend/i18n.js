@@ -1,5 +1,11 @@
 /* Borrower-facing UI strings.
  *
+ * The `mascot*` lines are what Sherni says. They are written to empower
+ * through knowledge rather than to reassure: "this is the law, not a favour"
+ * is the register, never "don't worry, we will help you". A borrower who is
+ * being telephoned before dawn does not need sympathy from a cartoon; they
+ * need to hear that the rule is on their side.
+ *
  * Everything the borrower reads is here in all six languages. These are
  * hand-written translations, not machine output — the same standard the
  * mock translator holds itself to (it passes text through rather than
@@ -51,6 +57,11 @@ const STRINGS = {
     showLetter: "पूरी चिट्ठी पढ़ें",
     preparingLetter: "चिट्ठी तैयार हो रही है…",
     sessionCleared: 'आपकी बातचीत मिटा दी गई है।',
+    mascotName: 'शेरनी',
+    mascotGreet: 'जो हुआ है वह बताइए। आपके पास उससे ज़्यादा अधिकार हैं जितने उन्होंने बताए।',
+    mascotListening: 'मैं सुन रही हूँ। आराम से बोलिए।',
+    mascotReading: 'इसे ठीक से पढ़ लेती हूँ।',
+    mascotRights: 'अब आप जानते हैं। सिर उठाकर खड़े रहिए — यह कानून है, कोई एहसान नहीं।',
   },
   mr: {
     greeting: 'नमस्कार. मी तुम्हाला तुमच्या कर्जाबद्दल मदत करू शकतो. माइकचे बटण दाबा आणि तुमच्या भाषेत सांगा — तुम्ही किती कर्ज घेतलं, कोणाकडून घेतलं, आणि आता काय अडचण आहे.',
@@ -82,6 +93,11 @@ const STRINGS = {
     showLetter: "संपूर्ण पत्र वाचा",
     preparingLetter: "पत्र तयार होत आहे…",
     sessionCleared: 'तुमचं संभाषण पुसलं गेलं आहे.',
+    mascotName: 'शेरनी',
+    mascotGreet: 'काय झालं ते सांगा. त्यांनी सांगितलं त्यापेक्षा जास्त हक्क तुमच्याकडे आहेत.',
+    mascotListening: 'मी ऐकते आहे. सावकाश सांगा.',
+    mascotReading: 'हे नीट वाचून घेते.',
+    mascotRights: 'आता तुम्हाला माहीत आहे. ताठ मानेने उभे राहा — हा कायदा आहे, उपकार नाही.',
   },
   ta: {
     greeting: 'வணக்கம். உங்கள் கடன் பற்றி நான் உதவ முடியும். மைக் பொத்தானை அழுத்தி உங்கள் மொழியில் சொல்லுங்கள் — எவ்வளவு கடன் வாங்கினீர்கள், யாரிடம் வாங்கினீர்கள், இப்போது என்ன பிரச்சினை.',
@@ -113,6 +129,11 @@ const STRINGS = {
     showLetter: "முழு கடிதத்தைப் படியுங்கள்",
     preparingLetter: "கடிதம் தயாராகிறது…",
     sessionCleared: 'உங்கள் உரையாடல் அழிக்கப்பட்டது.',
+    mascotName: 'ஷேர்னி',
+    mascotGreet: 'என்ன நடந்தது என்று சொல்லுங்கள். அவர்கள் சொன்னதை விட அதிக உரிமைகள் உங்களுக்கு உண்டு.',
+    mascotListening: 'நான் கேட்கிறேன். நிதானமாகச் சொல்லுங்கள்.',
+    mascotReading: 'இதைச் சரியாகப் படிக்கிறேன்.',
+    mascotRights: 'இப்போது உங்களுக்குத் தெரியும். நிமிர்ந்து நில்லுங்கள் — இது சட்டம், உபகாரம் அல்ல.',
   },
   te: {
     greeting: 'నమస్కారం. మీ రుణం గురించి నేను సహాయం చేయగలను. మైక్ బటన్ నొక్కి మీ భాషలో చెప్పండి — ఎంత రుణం తీసుకున్నారు, ఎవరి దగ్గర తీసుకున్నారు, ఇప్పుడు ఏమి సమస్య.',
@@ -144,6 +165,11 @@ const STRINGS = {
     showLetter: "పూర్తి లేఖను చదవండి",
     preparingLetter: "లేఖ సిద్ధమవుతోంది…",
     sessionCleared: 'మీ సంభాషణ తొలగించబడింది.',
+    mascotName: 'షేర్ని',
+    mascotGreet: 'ఏం జరిగిందో చెప్పండి. వాళ్ళు చెప్పిన దానికంటే ఎక్కువ హక్కులు మీకు ఉన్నాయి.',
+    mascotListening: 'నేను వింటున్నాను. నిదానంగా చెప్పండి.',
+    mascotReading: 'దీన్ని సరిగ్గా చదువుతాను.',
+    mascotRights: 'ఇప్పుడు మీకు తెలుసు. తల ఎత్తుకుని నిలబడండి — ఇది చట్టం, ఉపకారం కాదు.',
   },
   bho: {
     greeting: 'परनाम। हम रउआ के करजा के बारे में मदद कर सकीलें। माइक के बटन दबाईं आ आपन बात आपन भाषा में बताईं — केतना करजा लेले बानी, केकरा से लेले बानी, आ अब का दिक्कत बा।',
@@ -175,6 +201,11 @@ const STRINGS = {
     showLetter: "पूरा चिट्ठी पढ़ीं",
     preparingLetter: "चिट्ठी तइयार होत बा…",
     sessionCleared: 'रउआ के बातचीत मेटा दिहल गइल बा।',
+    mascotName: 'शेरनी',
+    mascotGreet: 'जे भइल बा ऊ बताईं। ओह लोग बतवले से जादे अधिकार रउरा लगे बा।',
+    mascotListening: 'हम सुनत बानी। आराम से बोलीं।',
+    mascotReading: 'एकरा के ठीक से पढ़ लेतानी।',
+    mascotRights: 'अब रउआ जानत बानी। माथा उठा के खड़ा रहीं — ई कानून ह, कवनो एहसान ना।',
   },
   en: {
     greeting: 'Hello. I can help you with your loan. Press the microphone and tell me in your own words — how much you borrowed, who you borrowed from, and what the problem is now.',
@@ -206,6 +237,11 @@ const STRINGS = {
     showLetter: "Read the full letter",
     preparingLetter: "Preparing the letter…",
     sessionCleared: 'Your conversation has been erased.',
+    mascotName: 'Sherni',
+    mascotGreet: 'Tell me what happened. You have more rights than they told you.',
+    mascotListening: 'I\'m listening. Take your time.',
+    mascotReading: 'Let me read this properly.',
+    mascotRights: 'Now you know. Stand tall — this is the law, not a favour.',
   },
 };
 
