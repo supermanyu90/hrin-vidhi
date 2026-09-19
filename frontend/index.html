@@ -260,6 +260,20 @@
   .mode-row .st.live { color: var(--tertiary); }
   .mode-row .st.fallback, .mode-row .st.forced { color: var(--on-surface-de-emphasis); }
   .mode-row .why { grid-column: 1 / -1; color: var(--on-surface-de-emphasis); font-size: 11px; }
+  /* Tappable replies. This audience should never have to type to move
+     forward, and the old flow asked for a document with no way to say "I do
+     not have one" — the borrower was simply stuck. */
+  .choices { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 6px 0; }
+  .choices button {
+    font-family: var(--ff-sans); font-size: 15px; line-height: 1.35;
+    padding: 12px 16px; min-height: 44px; text-align: left;
+    background: var(--surface-bright); color: var(--primary);
+    border: 1px solid var(--primary); border-radius: 18px; cursor: pointer;
+  }
+  .choices button:hover { background: var(--primary-container); }
+  .choices button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .choices button[data-tone="quiet"] { color: var(--on-surface-de-emphasis); border-color: var(--stroke-default); }
+
   /* ---- Phone ----------------------------------------------------------
      This audience is mobile-first in the literal sense: most will never see
      this on anything else, often on a 360px budget Android. Two things drive
@@ -379,6 +393,32 @@ function addRow(from, node) {
   row.appendChild(node);
   chat.appendChild(row);
   scrollDown();
+  return row;
+}
+
+/** A row of tappable replies. `options` is [{label, onPick, tone}]. */
+function choices(options) {
+  const row = document.createElement('div');
+  row.className = 'choices';
+  options.forEach(opt => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = opt.label;
+    if (opt.tone) b.dataset.tone = opt.tone;
+    b.addEventListener('click', () => {
+      // The choice becomes the borrower's own message, so the conversation
+      // reads back as something they took part in rather than a form.
+      // `echo: false` is for handlers that post it themselves — ask() does,
+      // and without this the question appeared twice.
+      if (opt.echo !== false) bubble(escapeHtml(opt.label), 'user');
+      // Take the whole row with it: removing only the buttons left an empty
+      // row behind, and the gaps accumulated down the conversation.
+      (row.closest('.row') || row).remove();
+      opt.onPick();
+    });
+    row.appendChild(b);
+  });
+  addRow('bot', row);
   return row;
 }
 
@@ -646,6 +686,7 @@ async function sendVoice(blob, substituted) {
     }
     bubble(html);
     bubble(escapeHtml(t(lang, 'afterVoice')));
+    offerDocumentOrNot();
     setStatus('');
   } catch (err) {
     typing.remove();
@@ -658,6 +699,31 @@ async function sendVoice(blob, substituted) {
 // ---------------------------------------------------------------------
 // F2/F3 — documents, money math, compliance
 // ---------------------------------------------------------------------
+
+/** After the voice note: send the paper, or say you do not have it. */
+function offerDocumentOrNot() {
+  choices([
+    { label: t(lang, 'sendPaper'), onPick: () => attachBtn.click() },
+    { label: t(lang, 'haveNoPaper'), tone: 'quiet', onPick: continueWithoutDocument },
+  ]);
+}
+
+/** The path for a borrower who was never given the paper, or has lost it.
+ *
+ * There is a great deal the app can still do: the corpus answers what a
+ * lender and a recovery agent may do without reading anybody's document. The
+ * example questions are tappable because someone who cannot read well should
+ * not have to type to find out they cannot be arrested over a debt. */
+function continueWithoutDocument() {
+  bubble(escapeHtml(t(lang, 'noPaperOk')));
+  choices(
+    ['askExample1', 'askExample2', 'askExample3'].map(key => ({
+      label: t(lang, key),
+      echo: false,          // ask() posts the question itself
+      onPick: () => ask(t(lang, key)),
+    }))
+  );
+}
 
 function openAttachMenu() {
   const existing = document.querySelector('.attach-menu');

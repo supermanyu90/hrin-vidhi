@@ -226,3 +226,45 @@ def test_a_fixture_transcript_is_never_labelled_as_what_was_heard() -> None:
 
     strings = (FRONTEND_DIR / "i18n.js").read_text(encoding="utf-8")
     assert strings.count("sampleNotice") == 6, "every language needs the notice"
+
+
+#: Which script each language must be written in. Devanagari covers Hindi,
+#: Marathi and Bhojpuri; Tamil and Telugu have their own blocks.
+_SCRIPT_RANGES = {
+    "hi": (0x0900, 0x097F),
+    "mr": (0x0900, 0x097F),
+    "bho": (0x0900, 0x097F),
+    "ta": (0x0B80, 0x0BFF),
+    "te": (0x0C00, 0x0C7F),
+}
+
+
+@pytest.mark.parametrize("lang", sorted(_SCRIPT_RANGES))
+def test_each_language_block_is_written_in_its_own_script(lang: str) -> None:
+    """Key parity alone does not catch a value in the wrong language.
+
+    An edit that inserted strings block by block drifted, and Telugu text
+    ended up under a Bhojpuri key. The key sets still matched, every existing
+    test passed, and a Bhojpuri speaker would have been shown Telugu.
+    """
+    import re
+
+    source = (FRONTEND_DIR / "i18n.js").read_text(encoding="utf-8")
+    start = re.search(rf"^  {lang}: \{{$", source, re.M)
+    assert start, lang
+    block = source[start.end(): source.index("\n  },", start.end())]
+
+    low, high = _SCRIPT_RANGES[lang]
+    wrong = {"hi", "mr", "bho", "ta", "te"} - {lang}
+    foreign = {w: _SCRIPT_RANGES[w] for w in wrong if _SCRIPT_RANGES[w] != (low, high)}
+
+    for line in block.splitlines():
+        match = re.match(r"\s*([a-zA-Z0-9]+): '((?:[^'\\]|\\.)*)'", line)
+        if not match:
+            continue
+        key, value = match.groups()
+        for other, (olow, ohigh) in foreign.items():
+            if any(olow <= ord(ch) <= ohigh for ch in value):
+                raise AssertionError(
+                    f"{lang}.{key} contains {other} script: {value[:40]!r}"
+                )
