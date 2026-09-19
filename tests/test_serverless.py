@@ -121,9 +121,15 @@ def test_no_response_approaches_the_serverless_size_limit(client: TestClient, li
         ),
         "/grievance/draft": client.post(
             "/grievance/draft",
-            json={"payload": {"report": report, "loan_facts": loan,
-                              "notice_facts": notice, "debt_analysis": debt,
-                              "language": "mr"}},
+            json={
+                "payload": {
+                    "report": report,
+                    "loan_facts": loan,
+                    "notice_facts": notice,
+                    "debt_analysis": debt,
+                    "language": "mr",
+                }
+            },
         ),
     }
     for name, response in responses.items():
@@ -142,9 +148,7 @@ def test_on_a_host_without_voices_no_audio_is_claimed(client: TestClient, linux_
     """Returning a silent WAV would look like a voice note to the UI and be
     ~6MB of base64. Returning nothing is smaller and truthful."""
     _, _, report = full_report(client)
-    rights = client.post(
-        "/explain/rights", json={"report": report, "language": "mr"}
-    ).json()
+    rights = client.post("/explain/rights", json={"report": report, "language": "mr"}).json()
 
     note = rights["voice_note"]
     assert note["audio_base64"] is None
@@ -196,8 +200,14 @@ def test_the_whole_pipeline_runs_with_no_session(client: TestClient) -> None:
 
     letter = client.post(
         "/grievance/draft",
-        json={"payload": {"report": report, "loan_facts": loan,
-                          "notice_facts": notice, "language": "mr"}},
+        json={
+            "payload": {
+                "report": report,
+                "loan_facts": loan,
+                "notice_facts": notice,
+                "language": "mr",
+            }
+        },
     )
     assert letter.status_code == 200
     body = letter.json()
@@ -205,3 +215,69 @@ def test_the_whole_pipeline_runs_with_no_session(client: TestClient) -> None:
     assert body["placeholders"]
     # The client builds the file from these, so they must all be present.
     assert body["body_english"] and body["addressees"] and body["disclaimer"]
+
+
+# ---------------------------------------------------------------------------
+# Deployment configuration
+# ---------------------------------------------------------------------------
+
+
+def test_no_builder_version_is_pinned() -> None:
+    """A pinned runtime is how the first Vercel deploy failed.
+
+    vercel.json asked for `@vercel/python@5.0.1`, which has never existed —
+    the published versions jump 12.x, 13.x, 14.x — so the build died at
+    `pin-version-mismatch` before any code ran. Python is an officially
+    supported runtime, where the docs are explicit that `runtime` is optional
+    and exists for community runtimes. Omitting it cannot go stale.
+    """
+    import json
+    from pathlib import Path
+
+    config = json.loads((Path(__file__).resolve().parents[1] / "vercel.json").read_text())
+    for name, fn in config.get("functions", {}).items():
+        assert "runtime" not in fn, (
+            f"{name} pins a builder version. Unless this is a community runtime, "
+            "drop it — a pin that drifts breaks the build, not one request."
+        )
+
+
+def test_the_function_bundle_carries_its_provider_sdk() -> None:
+    """A key in the dashboard does nothing without the package beside it.
+
+    `require_sdk` refuses to construct an adapter whose SDK is missing, so a
+    deploy without this line reports `fallback` with GOOGLE_API_KEY set and
+    looks like a broken key.
+    """
+    from pathlib import Path
+
+    requirements = (Path(__file__).resolve().parents[1] / "requirements.txt").read_text()
+    active = [
+        line.strip()
+        for line in requirements.splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
+    assert any(line.startswith("google-genai") for line in active), active
+    assert not any(line.startswith("pytest") for line in active), (
+        "a test runner has no business in a serverless bundle"
+    )
+
+
+def test_a_blank_environment_variable_does_not_take_the_site_down() -> None:
+    """Adding a dashboard variable and leaving it empty is an ordinary slip.
+
+    Before this, pydantic refused to read "" as a boolean and raised during
+    import — every route gone, with a validation error in the deploy log.
+    """
+    from backend.config import Settings
+
+    settings = Settings(DEMO_MODE="", PROVIDER_TIMEOUT_SECONDS="", PORT="")
+    assert settings.demo_mode is False
+    assert settings.provider_timeout_seconds > 0
+    assert settings.port > 0
+
+
+def test_an_explicit_setting_still_wins_over_the_blank_guard() -> None:
+    from backend.config import Settings
+
+    assert Settings(DEMO_MODE="true").demo_mode is True

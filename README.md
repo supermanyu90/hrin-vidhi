@@ -17,10 +17,10 @@ lender's Nodal Officer and the RBI Ombudsman.
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
 python -m backend.main                      # → http://127.0.0.1:8000 (no keys needed)
-pytest -q                                   # 585 tests
+pytest -q                                   # 589 tests
 ```
 
 **No API keys. No network.** That is the point — see below.
@@ -511,4 +511,4 @@ fails if any language loses its speech fallback.
 | 6 | F4 rights explainer (TTS) + F6 grievance drafter | done |
 | 7 | `docs/DEMO.md` — scripted 3-minute judge walkthrough | done |
 
-585 tests passing; the full flow completes in `DEMO_MODE` with no keys set.
+589 tests passing; the full flow completes in `DEMO_MODE` with no keys set.

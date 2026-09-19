@@ -1,20 +1,28 @@
-# Core runtime. Nothing here reaches the network at import time, and the
-# full DEMO_MODE flow needs no other package.
+# Runtime dependencies — exactly what the deployed function imports.
+#
+# This file is installed into the Vercel serverless bundle, so anything here
+# costs cold-start time on every request. Test and local-serving tools live in
+# requirements-dev.txt and are deliberately absent: a test runner has no
+# business inside a function serving borrowers.
+
 fastapi==0.141.1
-uvicorn[standard]==0.53.0
 pydantic==2.13.5
 pydantic-settings==2.15.0
 python-multipart==0.0.32      # multipart uploads: voice notes and photos
+httpx==0.28.1                 # Sarvam speech/translation calls, and the test client
 
-# Tests
-pytest==9.1.1
-anyio==4.11.0                 # async test cases (session store TTL / cap)
-httpx==0.28.1                 # FastAPI TestClient transport
+# --- Provider SDKs ---------------------------------------------------------
+# Present because the deployment uses Gemini for vision and prose. Without it
+# the adapter refuses to construct, /health reports `fallback` with the reason
+# "the `google-genai` package is not installed", and a GOOGLE_API_KEY set in
+# the dashboard silently does nothing.
+google-genai>=2.23
 
-# --- Optional, for going live. None is needed for the demo. -----------------
-# anthropic>=0.69             # vision document parser (F2) + prose tightening (F6)
-# google-genai>=2.23          # the same two jobs on Gemini instead. Either
-#                             # provider alone is enough; install only what you use.
+# Uncomment to run the same two jobs on Claude instead. Either provider alone
+# is a complete answer; installing both only adds weight to every cold start.
+# anthropic>=0.69
+
+# --- Optional upgrades, none needed to run ---------------------------------
 # sentence-transformers       # swaps BM25 retrieval for all-MiniLM-L6-v2.
 #                             # NOTE: downloads model weights on first use, so
 #                             # the demo default stays BM25 — see README.

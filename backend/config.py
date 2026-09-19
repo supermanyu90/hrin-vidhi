@@ -20,7 +20,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -121,6 +121,35 @@ class Settings(BaseSettings):
     )
     rag_top_k: int = 4
     embedding_model: str = "all-MiniLM-L6-v2"
+
+    @model_validator(mode="before")
+    @classmethod
+    def _blank_means_unset(cls, values):
+        """Treat a blank environment variable as absent, not as a value.
+
+        A dashboard is a text box: adding DEMO_MODE and leaving it empty is a
+        normal thing to do, and pydantic then refuses to parse "" as a boolean
+        and raises during import. That does not degrade the site — it takes the
+        whole function down before a single route is registered, and the
+        deployment log shows a validation error rather than anything about
+        configuration.
+
+        Blanks are dropped only for fields that cannot hold one. An empty
+        string is a legitimate value for a key or a hostname, and for the API
+        keys it is how "no credential" is already expressed.
+        """
+        if not isinstance(values, dict):
+            return values
+
+        cleaned = {}
+        for key, value in values.items():
+            field = cls.model_fields.get(key.lower())
+            is_blank = isinstance(value, str) and not value.strip()
+            accepts_text = field is not None and field.annotation in (str, str | None)
+            if is_blank and field is not None and not accepts_text:
+                continue  # fall through to the field's default
+            cleaned[key] = value
+        return cleaned
 
     @property
     def has_anthropic(self) -> bool:

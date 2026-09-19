@@ -1,0 +1,8 @@
+# Local development and tests. Not installed on Vercel.
+-r requirements.txt
+
+uvicorn[standard]==0.53.0     # `python -m backend.main`; imported lazily, so
+                              # the serverless function never needs it
+pytest==9.1.1
+anyio==4.11.0                 # async test cases (session store TTL / cap)
+ruff                          # lint and format

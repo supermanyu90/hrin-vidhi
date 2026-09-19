@@ -10,6 +10,19 @@ once one is, so what is actually answering is visible on the deployed page.
 
 ---
 
+**Do not pin the Python runtime in `vercel.json`.** The first deploy of this
+project failed with `pin-version-mismatch` because it asked for
+`@vercel/python@5.0.1`, a version that has never been published. Python is an
+officially supported runtime, so `runtime` is optional and exists for
+community runtimes only — omitting it cannot drift out of date.
+
+`requirements.txt` is the serverless bundle and holds runtime dependencies
+only, `google-genai` among them: without the package a `GOOGLE_API_KEY` set in
+the dashboard resolves to `fallback` and looks like a broken key. Test and
+local-serving tools live in `requirements-dev.txt`.
+
+---
+
 ## 1 · Push to GitHub
 
 ```bash
