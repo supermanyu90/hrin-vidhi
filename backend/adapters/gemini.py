@@ -53,7 +53,31 @@ def _client(api_key: str):
             "the `google-genai` package is not installed (pip install google-genai)",
             recoverable=False,
         ) from exc
-    return genai.Client(api_key=api_key)
+    from google.genai import types
+
+    # Bound the SDK's own retries.
+    #
+    # Left alone it retries with exponential backoff inside our call, and a
+    # transient 503 was observed turning one document upload into three
+    # attempts over 110 seconds. The wall-clock ceiling stops that reaching
+    # the borrower, but the retries still burn the whole budget and, on a
+    # quota-limited key, spend requests that a rate limit is already refusing.
+    #
+    # Two attempts, briefly spaced: enough to ride out a single blip, not
+    # enough to amplify an outage. A 429 is excluded deliberately — retrying
+    # a rate limit is how you stay rate-limited.
+    return genai.Client(
+        api_key=api_key,
+        http_options=types.HttpOptions(
+            timeout=25_000,  # milliseconds; inside PROVIDER_TIMEOUT_SECONDS
+            retry_options=types.HttpRetryOptions(
+                attempts=2,
+                initial_delay=0.5,
+                max_delay=2.0,
+                http_status_codes=[500, 502, 503, 504],
+            ),
+        ),
+    )
 
 
 def _strip_code_fence(text: str) -> str:

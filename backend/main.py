@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -112,6 +113,28 @@ def create_app() -> FastAPI:
     app.include_router(calc.router)
     app.include_router(analysis_routes.router)
     app.include_router(output.router)
+
+    @app.middleware("http")
+    async def _record_latency(request, call_next):
+        """Time every request so the tail is visible, not just the average."""
+        from backend import telemetry
+
+        started = time.perf_counter()
+        response = await call_next(request)
+        route = f"{request.method} {request.scope.get('route_path') or request.url.path}"
+        telemetry.record(route, time.perf_counter() - started)
+        return response
+
+    @app.get("/metrics", include_in_schema=False, tags=["meta"])
+    async def metrics() -> dict:
+        """P50/P95/P99 per route, against a written budget.
+
+        In memory and per instance: enough to answer "is anything slow?"
+        after a deploy without an agent or an exporter.
+        """
+        from backend import telemetry
+
+        return telemetry.snapshot()
 
     @app.get("/health", response_model=HealthResponse, tags=["meta"])
     async def health() -> HealthResponse:

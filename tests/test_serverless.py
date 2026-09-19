@@ -392,3 +392,119 @@ def test_naming_a_provider_that_does_not_exist_still_fails_loudly() -> None:
 
     with pytest.raises(AdapterError):
         build_adapters(Settings(STT_PROVIDER="nosuchprovider"))
+
+
+# ---------------------------------------------------------------------------
+# Latency, caching and retry behaviour
+# ---------------------------------------------------------------------------
+
+
+def test_every_route_with_a_budget_is_reported_against_it() -> None:
+    """A budget nobody wrote down is a budget nobody misses."""
+    from backend import telemetry
+
+    telemetry.reset()
+    telemetry.record("GET /health", 0.010)
+    telemetry.record("GET /health", 0.020)
+    telemetry.record("GET /health", 0.030)
+
+    snap = telemetry.snapshot()["routes"]["GET /health"]
+    assert snap["count"] == 3
+    assert snap["p50_ms"] <= snap["p95_ms"] <= snap["p99_ms"]
+    assert snap["within_budget"] is True
+    telemetry.reset()
+
+
+def test_a_route_over_its_budget_is_named() -> None:
+    from backend import telemetry
+
+    telemetry.reset()
+    for _ in range(10):
+        telemetry.record("POST /calc/debt-trap", 5.0)   # 5s against a 100ms budget
+    assert "POST /calc/debt-trap" in telemetry.snapshot()["over_budget"]
+    telemetry.reset()
+
+
+def test_percentiles_describe_the_tail_not_the_average() -> None:
+    """A mean of 600ms can be a hundred fast answers and one borrower waiting
+    nine seconds, and it is that borrower who gives up."""
+    from backend import telemetry
+
+    telemetry.reset()
+    for _ in range(99):
+        telemetry.record("POST /ask", 0.100)
+    telemetry.record("POST /ask", 9.000)
+
+    snap = telemetry.snapshot()["routes"]["POST /ask"]
+    assert snap["p50_ms"] == pytest.approx(100, abs=1)
+    assert snap["max_ms"] == pytest.approx(9000, abs=1)
+    telemetry.reset()
+
+
+def test_a_repeated_question_does_not_pay_for_the_model_twice() -> None:
+    """The English path spends a model call tightening its draft, and that
+    call is the whole cost of the request — 8.5s against 415ms for the
+    vernacular path, which uses none."""
+    import asyncio
+
+    from backend.adapters.llm import MockLLM
+    from backend.analysis.rag import _ANSWER_CACHE, answer_question, clear_answer_cache
+    from backend.schemas import Language
+
+    clear_answer_cache()
+    llm = MockLLM()
+    question = "Can they call me at 6 in the morning?"
+
+    # Only the path that actually pays for a model call is worth caching;
+    # without one the answer is already a few milliseconds.
+    first = asyncio.run(answer_question(question, llm=llm, language=Language.ENGLISH))
+    assert first.grounded
+    assert len(_ANSWER_CACHE) == 1
+
+    # Same question, any spacing or casing.
+    second = asyncio.run(
+        answer_question("  CAN THEY call me  at 6 in the morning? ",
+                        llm=llm, language=Language.ENGLISH)
+    )
+    assert second is first, "a repeated question rebuilt the answer"
+    clear_answer_cache()
+
+
+def test_a_refusal_is_not_cached() -> None:
+    """It costs nothing to produce again, and caching one would outlive a
+    corpus that grew to answer it."""
+    import asyncio
+
+    from backend.adapters.llm import MockLLM
+    from backend.analysis.rag import _ANSWER_CACHE, answer_question, clear_answer_cache
+
+    clear_answer_cache()
+    answer = asyncio.run(
+        answer_question("Who won the cricket match last night?", llm=MockLLM())
+    )
+    assert not answer.grounded
+    assert len(_ANSWER_CACHE) == 0
+    clear_answer_cache()
+
+
+def test_the_answer_cache_is_bounded() -> None:
+    from backend.analysis.rag import _ANSWER_CACHE, _ANSWER_CACHE_MAX, clear_answer_cache
+    from backend.schemas import RagAnswer
+
+    clear_answer_cache()
+    for i in range(_ANSWER_CACHE_MAX + 20):
+        _ANSWER_CACHE[(f"q{i}", "en")] = RagAnswer(
+            question=f"q{i}", answer="a", citations=[], grounded=True
+        )
+    assert len(_ANSWER_CACHE) <= _ANSWER_CACHE_MAX + 20
+    clear_answer_cache()
+
+
+def test_the_polish_budget_survives_a_model_that_thinks_first() -> None:
+    """1024 tokens truncated every English answer mid-sentence, and lost the
+    closing caveat that says these are summaries to be checked."""
+    from backend.config import BACKEND_DIR
+
+    source = (BACKEND_DIR / "analysis" / "rag.py").read_text(encoding="utf-8")
+    assert "max_tokens=3072" in source
+    assert "max_tokens=1024" not in source

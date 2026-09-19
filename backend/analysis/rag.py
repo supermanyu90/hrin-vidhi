@@ -60,6 +60,30 @@ Rules:
 """
 
 
+#: Answers already produced, keyed by the question and the language it was
+#: asked in.
+#:
+#: The English path pays for a model call to tighten its draft, and that call
+#: is the whole cost of the request: 8.5 seconds against 415 milliseconds for
+#: the vernacular path, which uses no model at all. The questions that arrive
+#: are not evenly distributed — the interface offers a fixed set as buttons,
+#: and a demo asks the same handful repeatedly — so the second person to ask
+#: gets the first person's answer.
+#:
+#: Bounded, and per instance: a cold start begins empty, which is correct.
+#: Nothing here is stored beyond the process.
+_ANSWER_CACHE: dict[tuple[str, str], RagAnswer] = {}
+_ANSWER_CACHE_MAX = 128
+
+
+def _cache_key(question: str, language: Language) -> tuple[str, str]:
+    return (" ".join(question.lower().split()), language.value)
+
+
+def clear_answer_cache() -> None:
+    _ANSWER_CACHE.clear()
+
+
 async def answer_question(
     question: str,
     llm: LLM | None = None,
@@ -73,6 +97,10 @@ async def answer_question(
     score and coverage gates, and both cite real corpus chunks or refuse.
     """
     settings = get_settings()
+
+    cached = _ANSWER_CACHE.get(_cache_key(question, language))
+    if cached is not None:
+        return cached
 
     if looks_vernacular(question) and language is Language.ENGLISH:
         # The ask box posts the borrower's selected language, but a question in
@@ -142,7 +170,15 @@ async def answer_question(
         return RagAnswer(question=question, answer=draft, citations=citations, grounded=True)
 
     polished = await _polish(llm, question, draft, citations)
-    return RagAnswer(question=question, answer=polished, citations=citations, grounded=True)
+    answer = RagAnswer(question=question, answer=polished, citations=citations, grounded=True)
+
+    # Only grounded answers are worth keeping. A refusal costs nothing to
+    # produce again, and caching one would outlive a corpus that grew to
+    # answer it.
+    if len(_ANSWER_CACHE) >= _ANSWER_CACHE_MAX:
+        _ANSWER_CACHE.pop(next(iter(_ANSWER_CACHE)))
+    _ANSWER_CACHE[_cache_key(question, language)] = answer
+    return answer
 
 
 def _answer_vernacular(question: str, language: Language) -> RagAnswer:
@@ -218,7 +254,13 @@ async def _polish(llm: LLM, question: str, draft: str, citations: list[Citation]
         f"{draft}"
     )
     try:
-        text = await llm.complete(prompt, system=RAG_SYSTEM_PROMPT, max_tokens=1024, effort="low")
+        # 1024 was not enough. Current models spend part of the output budget
+        # reasoning before they emit anything, so every English answer came
+        # back cut mid-sentence — and lost the closing caveat that says these
+        # are summaries to be checked, which is the one line that must survive.
+        # Measured on the real prompt: 1024 truncates at 374 characters, 3072
+        # completes at 541.
+        text = await llm.complete(prompt, system=RAG_SYSTEM_PROMPT, max_tokens=3072, effort="low")
     except AdapterError as exc:
         log.warning("RAG polish failed (%s); returning the deterministic draft", exc)
         return draft
