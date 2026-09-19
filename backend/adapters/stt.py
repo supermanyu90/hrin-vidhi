@@ -73,6 +73,9 @@ class SarvamSpeechToText(SpeechToText):
 
     provider = "sarvam"
     endpoint = "https://api.sarvam.ai/speech-to-text"
+    #: saarika:v1 and v2 are retired. Verified live (September 2026): the API
+    #: rejects them outright and names saaras:v3 as the replacement.
+    model = "saaras:v3"
 
     def __init__(self, settings: Settings) -> None:
         if not settings.sarvam_api_key:
@@ -95,7 +98,7 @@ class SarvamSpeechToText(SpeechToText):
                     self.endpoint,
                     headers={"api-subscription-key": self._key},
                     files={"file": ("audio.webm", audio, mime_type)},
-                    data={"language_code": code, "model": "saarika:v2"},
+                    data={"language_code": code, "model": self.model},
                 )
                 response.raise_for_status()
                 payload = response.json()

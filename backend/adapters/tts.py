@@ -156,6 +156,12 @@ class SarvamTextToSpeech(TextToSpeech):
     provider = "sarvam"
     endpoint = "https://api.sarvam.ai/text-to-speech"
     max_chars = 500
+    #: bulbul:v1 and v2 are retired; v3 is current and has its own speaker
+    #: list, which no longer includes the "meera" this adapter used to ask for.
+    #: Both were rejected outright with a 400 until this was verified live.
+    model = "bulbul:v3"
+    #: A calm female Hindi voice. Valid for bulbul:v3.
+    speaker = "ritu"
 
     def __init__(self, settings: Settings) -> None:
         if not settings.sarvam_api_key:
@@ -165,11 +171,17 @@ class SarvamTextToSpeech(TextToSpeech):
     async def synthesize(self, text: str, language: Language) -> SpeechAudio:
         import httpx
 
-        # Bulbul caps input length, so a full rights script goes as several
-        # clips and comes back as several. ALL of them are kept and joined:
-        # returning only the first truncated the borrower's voice note to
-        # roughly a third of the script and cut off the spoken disclaimer,
-        # which §9 requires them to hear.
+        # Bulbul caps the length of each input, so a full rights script is sent
+        # as several pieces.
+        #
+        # Verified against bulbul:v3 (September 2026): the API synthesises
+        # EVERY input and returns them already concatenated as a single clip —
+        # `["नमस्ते।"]` renders 1.23s, `["नमस्ते।", <long passage>]` renders
+        # 16.59s, so nothing is being dropped. We still join whatever comes
+        # back rather than taking `audios[0]`, because one clip joins to
+        # itself and a future version that returns one clip per input would
+        # otherwise silently truncate the borrower's voice note to its first
+        # sentences — losing the spoken disclaimer §9 requires.
         pieces = split_on_sentences(text, self.max_chars)
         try:
             async with httpx.AsyncClient(timeout=45.0) as client:
@@ -179,9 +191,9 @@ class SarvamTextToSpeech(TextToSpeech):
                     json={
                         "inputs": pieces,
                         "target_language_code": _SARVAM_CODES.get(language, "hi-IN"),
-                        "speaker": "meera",
+                        "speaker": self.speaker,
                         "pace": 0.9,
-                        "model": "bulbul:v1",
+                        "model": self.model,
                     },
                 )
                 response.raise_for_status()
@@ -191,14 +203,6 @@ class SarvamTextToSpeech(TextToSpeech):
 
         if not audios:
             raise AdapterError(self.provider, "synthesis returned no audio")
-        if len(audios) < len(pieces):
-            # Fewer clips than sentences means part of the script is missing.
-            # Say so rather than handing back a note that stops mid-sentence.
-            log.warning(
-                "Sarvam returned %d clips for %d pieces; the voice note would be "
-                "incomplete", len(audios), len(pieces),
-            )
-
         try:
             joined = join_wav([base64.b64decode(a) for a in audios])
         except (WavError, ValueError) as exc:

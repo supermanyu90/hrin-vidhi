@@ -164,11 +164,17 @@ def sarvam(monkeypatch):
 
 
 def test_the_whole_script_is_spoken_not_just_the_first_clip(sarvam) -> None:
-    """The regression guard.
+    """Whatever clips come back are joined, rather than only the first.
 
-    This adapter used to send every piece, pay for every clip, and return
-    `audios[0]` — about a third of the script. The borrower heard their rights
-    cut off mid-sentence and never heard the disclaimer at the end.
+    Verified live against bulbul:v3: that version synthesises every input and
+    returns them already concatenated as one clip, so `audios[0]` happens to
+    be the whole script today — an earlier version of this comment claimed
+    otherwise and was wrong.
+
+    The guard is still worth having, because the cost of being wrong is
+    silent: a future version that returns one clip per input would truncate
+    the voice note to its opening sentences and drop the spoken disclaimer,
+    with nothing in the response to say so. This stubs that shape explicitly.
     """
     script = LONG_HINDI  # comfortably over the 500-character cap
     audio = asyncio.run(sarvam.synthesize(script, Language.HINDI))
