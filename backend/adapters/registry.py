@@ -112,7 +112,9 @@ def _resolve(
     status: dict[str, CapabilityStatus],
 ) -> Adapter:
     """Pick the implementation and record, in `status`, how it was picked."""
-    choice = choice.strip().lower()
+    # A blank choice is an unset one. Settings already normalises this; the
+    # repeat is deliberate, because the failure mode is the whole site.
+    choice = (choice or "").strip().lower() or "auto"
 
     def record(adapter: Adapter, state: str, detail: str) -> Adapter:
         status[name] = CapabilityStatus(provider=adapter.provider, state=state, detail=detail)

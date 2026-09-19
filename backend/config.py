@@ -134,22 +134,28 @@ class Settings(BaseSettings):
         deployment log shows a validation error rather than anything about
         configuration.
 
-        Blanks are dropped only for fields that cannot hold one. An empty
-        string is a legitimate value for a key or a hostname, and for the API
-        keys it is how "no credential" is already expressed.
+        A blank means "not configured" for EVERY setting, including the text
+        ones. An earlier version of this guard exempted strings, on the
+        reasoning that "" is a legitimate hostname or key — and a blank
+        STT_PROVIDER then reached the registry as a provider named empty
+        string, which took production down with:
+
+            AdapterError: [stt] unknown provider ''; known: ['bhashini', 'sarvam']
+
+        There is no setting here where an empty string is the intended value:
+        a blank key is absent (None is already the default and both are
+        falsy), a blank provider is `auto`, a blank model is the default
+        model. Naming a provider that does not exist still fails loudly, which
+        is the point of that error — leaving the box empty is not naming one.
         """
         if not isinstance(values, dict):
             return values
 
-        cleaned = {}
-        for key, value in values.items():
-            field = cls.model_fields.get(key.lower())
-            is_blank = isinstance(value, str) and not value.strip()
-            accepts_text = field is not None and field.annotation in (str, str | None)
-            if is_blank and field is not None and not accepts_text:
-                continue  # fall through to the field's default
-            cleaned[key] = value
-        return cleaned
+        return {
+            key: value
+            for key, value in values.items()
+            if not (isinstance(value, str) and not value.strip() and key.lower() in cls.model_fields)
+        }
 
     @property
     def has_anthropic(self) -> bool:

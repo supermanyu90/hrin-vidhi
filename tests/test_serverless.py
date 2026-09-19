@@ -355,3 +355,40 @@ def test_an_explicit_setting_still_wins_over_the_blank_guard() -> None:
     from backend.config import Settings
 
     assert Settings(DEMO_MODE="true").demo_mode is True
+
+
+def test_a_blank_provider_choice_does_not_take_the_site_down() -> None:
+    """This one actually happened, in production, on every route.
+
+    A blank STT_PROVIDER reached the registry as a provider literally named
+    "" and `build_adapters` raised at import:
+
+        AdapterError: [stt] unknown provider ''; known: ['bhashini', 'sarvam']
+
+    An earlier guard exempted string fields, reasoning that "" is a valid
+    hostname. For a provider choice it is not a value at all.
+    """
+    from backend.adapters.registry import build_adapters
+    from backend.config import Settings
+
+    settings = Settings(
+        STT_PROVIDER="", TRANSLATE_PROVIDER="", TTS_PROVIDER="",
+        DOCPARSER_PROVIDER="", LLM_PROVIDER="", GOOGLE_MODEL="",
+    )
+    assert settings.stt_provider == "auto"
+    assert settings.google_model, "a blank model must fall back, not empty out"
+
+    adapters, _ = build_adapters(settings)
+    assert adapters.mode in ("genai", "fallback", "forced")
+
+
+def test_naming_a_provider_that_does_not_exist_still_fails_loudly() -> None:
+    """The blank guard must not soften a real misconfiguration."""
+    import pytest
+
+    from backend.adapters.base import AdapterError
+    from backend.adapters.registry import build_adapters
+    from backend.config import Settings
+
+    with pytest.raises(AdapterError):
+        build_adapters(Settings(STT_PROVIDER="nosuchprovider"))
