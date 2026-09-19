@@ -76,6 +76,16 @@ class Settings(BaseSettings):
     docparser_provider: str = "auto"
     llm_provider: str = "auto"
 
+    #: Wall-clock ceiling on any single provider call.
+    #:
+    #: Provider SDKs retry internally with backoff. A transient 503 from Google
+    #: was observed turning one document upload into three retries over 110
+    #: seconds and still climbing — the borrower just watches a spinner, and on
+    #: Vercel the function is killed at 30s with nothing to show. Past this
+    #: ceiling we give up on the provider and fall back, which the interface
+    #: then reports honestly.
+    provider_timeout_seconds: float = Field(default=25.0, gt=0)
+
     # -- privacy ------------------------------------------------------------
     persist_uploads: bool = Field(
         default=False,

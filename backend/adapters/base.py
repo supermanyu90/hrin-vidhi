@@ -142,3 +142,24 @@ def require_sdk(provider: str, module: str, package: str) -> None:
             f"the `{package}` package is not installed (pip install {package})",
             recoverable=False,
         )
+
+
+async def with_timeout(coro, seconds: float, provider: str, what: str):
+    """Run `coro`, giving up after `seconds` and raising a recoverable error.
+
+    Recoverable on purpose: the caller falls back to the offline implementation
+    and the borrower's flow completes. A provider having a bad minute should
+    cost them fluency, not the answer.
+
+    Note the cancellation only releases *this* request — a call already running
+    inside `asyncio.to_thread` cannot be interrupted and will finish into the
+    void. That is the accepted cost of not blocking the event loop.
+    """
+    import asyncio
+
+    try:
+        return await asyncio.wait_for(coro, timeout=seconds)
+    except (TimeoutError, asyncio.TimeoutError) as exc:
+        raise AdapterError(
+            provider, f"{what} exceeded {seconds:g}s and was abandoned"
+        ) from exc

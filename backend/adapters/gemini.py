@@ -29,7 +29,13 @@ import json
 import logging
 from typing import Literal
 
-from backend.adapters.base import LLM, AdapterError, DocumentParser, require_sdk
+from backend.adapters.base import (
+    LLM,
+    AdapterError,
+    DocumentParser,
+    require_sdk,
+    with_timeout,
+)
 from backend.adapters.docparser import VISION_SYSTEM_PROMPT
 from backend.config import Settings
 from backend.schemas import DocumentExtraction, ParsedDocument
@@ -82,6 +88,7 @@ class GeminiDocumentParser(DocumentParser):
         require_sdk(self.provider, "google.genai", "google-genai")
         self._key = settings.google_api_key
         self._model = settings.google_model
+        self._timeout = settings.provider_timeout_seconds
 
     async def parse(
         self,
@@ -119,7 +126,9 @@ class GeminiDocumentParser(DocumentParser):
             )
 
         try:
-            interaction = await asyncio.to_thread(call)
+            interaction = await with_timeout(
+                asyncio.to_thread(call), self._timeout, self.provider, "vision extraction"
+            )
             raw = _output_text(interaction)
         except AdapterError:
             raise
@@ -153,6 +162,7 @@ class GeminiLLM(LLM):
         require_sdk(self.provider, "google.genai", "google-genai")
         self._key = settings.google_api_key
         self._model = settings.google_model
+        self._timeout = settings.provider_timeout_seconds
 
     async def complete(
         self,
@@ -176,7 +186,9 @@ class GeminiLLM(LLM):
             )
 
         try:
-            interaction = await asyncio.to_thread(call)
+            interaction = await with_timeout(
+                asyncio.to_thread(call), self._timeout, self.provider, "completion"
+            )
             text = _output_text(interaction)
         except AdapterError:
             raise

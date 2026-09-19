@@ -14,7 +14,7 @@ import logging
 import re
 from typing import Literal
 
-from backend.adapters.base import LLM, AdapterError, require_sdk
+from backend.adapters.base import LLM, AdapterError, require_sdk, with_timeout
 from backend.config import Settings
 
 log = logging.getLogger(__name__)
@@ -89,6 +89,7 @@ class AnthropicLLM(LLM):
         require_sdk(self.provider, "anthropic", "anthropic")
         self._key = settings.anthropic_api_key
         self._model = settings.anthropic_model
+        self._timeout = settings.provider_timeout_seconds
 
     async def complete(
         self,
@@ -114,7 +115,11 @@ class AnthropicLLM(LLM):
                 output_config={"effort": effort},
                 messages=[{"role": "user", "content": prompt}],
             ) as stream:
-                message = await stream.get_final_message()
+                message = await with_timeout(
+                    stream.get_final_message(), self._timeout, self.provider, "completion"
+                )
+        except AdapterError:
+            raise
         except Exception as exc:
             raise AdapterError(self.provider, f"completion failed: {exc}") from exc
 

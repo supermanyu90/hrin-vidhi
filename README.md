@@ -73,6 +73,13 @@ GenAI · 3/5          Hearing you          sarvam     sarvam key found
 A key that is set but whose SDK is missing resolves to `fallback`, not `live`: an adapter that
 claimed to be live and then degraded on the first real call would make the badge a lie.
 
+**Every provider call has a wall-clock ceiling** (`PROVIDER_TIMEOUT_SECONDS`, 25s). Provider
+SDKs retry internally with backoff, so a transient upstream error does not fail fast — an
+observed Google 503 turned one document upload into three retries over 110 seconds and was
+still climbing, and Vercel kills the function at 30s regardless. Past the ceiling the provider
+is abandoned, the offline implementation answers, and the response reports `mock` rather than
+pretending the model produced it.
+
 The switch is enforced in one place, `backend/adapters/registry.py`, and the registry raises if
 `DEMO_MODE` is on while any real adapter has been selected. `/health` reports exactly what is
 wired up, which is the first thing to check at a demo:

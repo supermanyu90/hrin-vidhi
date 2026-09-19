@@ -13,7 +13,7 @@ import json
 import logging
 from functools import lru_cache
 
-from backend.adapters.base import AdapterError, DocumentParser, require_sdk
+from backend.adapters.base import AdapterError, DocumentParser, require_sdk, with_timeout
 from backend.config import FIXTURES_DIR, Settings
 from backend.schemas import DocumentExtraction, ParsedDocument
 
@@ -95,8 +95,6 @@ class MockDocumentParser(DocumentParser):
         return self.LOAN_FIXTURE
 
 
-
-
 class AnthropicDocumentParser(DocumentParser):
     """Claude vision extraction via structured outputs. Requires ANTHROPIC_API_KEY.
 
@@ -114,6 +112,7 @@ class AnthropicDocumentParser(DocumentParser):
         require_sdk(self.provider, "anthropic", "anthropic")
         self._key = settings.anthropic_api_key
         self._model = settings.anthropic_model
+        self._timeout = settings.provider_timeout_seconds
         self._effort = settings.anthropic_effort
 
     async def parse(
@@ -139,29 +138,36 @@ class AnthropicDocumentParser(DocumentParser):
         )
         try:
             client = AsyncAnthropic(api_key=self._key)
-            response = await client.messages.parse(
-                model=self._model,
-                max_tokens=8192,
-                system=VISION_SYSTEM_PROMPT,
-                output_format=DocumentExtraction,
-                output_config={"effort": self._effort},
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": mime_type,
-                                    "data": base64.b64encode(image).decode(),
+            response = await with_timeout(
+                client.messages.parse(
+                    model=self._model,
+                    max_tokens=8192,
+                    system=VISION_SYSTEM_PROMPT,
+                    output_format=DocumentExtraction,
+                    output_config={"effort": self._effort},
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "image",
+                                    "source": {
+                                        "type": "base64",
+                                        "media_type": mime_type,
+                                        "data": base64.b64encode(image).decode(),
+                                    },
                                 },
-                            },
-                            {"type": "text", "text": user_text},
-                        ],
-                    }
-                ],
+                                {"type": "text", "text": user_text},
+                            ],
+                        }
+                    ],
+                ),
+                self._timeout,
+                self.provider,
+                "vision extraction",
             )
+        except AdapterError:
+            raise
         except Exception as exc:
             raise AdapterError(self.provider, f"vision extraction failed: {exc}") from exc
 
