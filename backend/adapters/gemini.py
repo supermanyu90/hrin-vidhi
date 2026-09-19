@@ -56,16 +56,41 @@ def _client(api_key: str):
     return genai.Client(api_key=api_key)
 
 
+def _strip_code_fence(text: str) -> str:
+    """Unwrap ```json ... ``` if the model fenced its output.
+
+    `response_format` asks for `application/json`, and the newer models honour
+    that literally. Older ones — gemini-2.5-flash among them, verified live —
+    return the same JSON wrapped in a markdown fence, which every strict parser
+    then rejects. The extraction was correct; only the packaging differed, and
+    a whole document upload was failing on three backticks.
+
+    Anything that is not fenced is returned untouched.
+    """
+    stripped = text.strip()
+    if not stripped.startswith("```"):
+        return stripped
+    # Drop the opening fence and its optional language tag, then the closer.
+    body = stripped[3:]
+    if "\n" in body:
+        first_line, _, rest = body.partition("\n")
+        if first_line.strip().lower() in ("", "json"):
+            body = rest
+    if body.rstrip().endswith("```"):
+        body = body.rstrip()[:-3]
+    return body.strip()
+
+
 def _output_text(interaction) -> str:
     """Pull the text out, tolerating an SDK that renames the accessor."""
     text = getattr(interaction, "output_text", None)
     if text:
-        return text
+        return _strip_code_fence(text)
     # Older/newer surfaces have used `.text`; fall back before giving up so a
     # minor SDK bump degrades to the mock rather than crashing the request.
     text = getattr(interaction, "text", None)
     if text:
-        return text
+        return _strip_code_fence(text)
     raise AdapterError("gemini", "no text found on the model response")
 
 

@@ -62,7 +62,12 @@ class Settings(BaseSettings):
     anthropic_effort: str = "medium"
     # Google — an alternative to Anthropic for vision and prose.
     google_api_key: str | None = None
-    google_model: str = "gemini-3.8-flash"
+    #: gemini-3.5-flash, not the newer 3.8: both extract this corpus correctly,
+    #: but 3.8-flash allows only 20 requests a day on the free tier, which a
+    #: single rehearsal exhausts. 3.5-flash is verified at 22s for a document
+    #: page and honours the response schema, which gemini-2.5-flash does not —
+    #: 2.5 returns its own field names and every extraction fails validation.
+    google_model: str = "gemini-3.5-flash"
 
     bhashini_api_key: str | None = None
     bhashini_user_id: str | None = None
@@ -84,7 +89,7 @@ class Settings(BaseSettings):
     #: Vercel the function is killed at 30s with nothing to show. Past this
     #: ceiling we give up on the provider and fall back, which the interface
     #: then reports honestly.
-    provider_timeout_seconds: float = Field(default=25.0, gt=0)
+    provider_timeout_seconds: float = Field(default=40.0, gt=0)
 
     # -- privacy ------------------------------------------------------------
     persist_uploads: bool = Field(
