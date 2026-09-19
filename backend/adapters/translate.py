@@ -12,6 +12,7 @@ from __future__ import annotations
 import logging
 
 from backend.adapters.base import AdapterError, Translator
+from backend.adapters.http import shared_client
 from backend.adapters.stt import _load_fixtures
 from backend.adapters.text import split_on_sentences
 from backend.config import Settings
@@ -63,9 +64,7 @@ class MockTranslator(Translator):
 
     provider = "mock"
 
-    async def translate(
-        self, text: str, source: Language, target: Language
-    ) -> TranslationResult:
+    async def translate(self, text: str, source: Language, target: Language) -> TranslationResult:
         if source == target:
             return TranslationResult(
                 text=text, source_language=source, target_language=target, provider=self.provider
@@ -132,28 +131,26 @@ class SarvamTranslator(Translator):
             raise AdapterError(self.provider, "SARVAM_API_KEY is not set", recoverable=False)
         self._key = settings.sarvam_api_key
 
-    async def translate(
-        self, text: str, source: Language, target: Language
-    ) -> TranslationResult:
-        import httpx
+    async def translate(self, text: str, source: Language, target: Language) -> TranslationResult:
 
         chunks = split_on_sentences(text, self.max_chars)
         out: list[str] = []
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                for chunk in chunks:
-                    response = await client.post(
-                        self.endpoint,
-                        headers={"api-subscription-key": self._key},
-                        json={
-                            "input": chunk,
-                            "source_language_code": _SARVAM_CODES.get(source, "hi-IN"),
-                            "target_language_code": _SARVAM_CODES.get(target, "en-IN"),
-                            "mode": "formal",
-                        },
-                    )
-                    response.raise_for_status()
-                    out.append(response.json()["translated_text"])
+            client = await shared_client()
+            for chunk in chunks:
+                response = await client.post(
+                    self.endpoint,
+                    headers={"api-subscription-key": self._key},
+                    json={
+                        "input": chunk,
+                        "source_language_code": _SARVAM_CODES.get(source, "hi-IN"),
+                        "target_language_code": _SARVAM_CODES.get(target, "en-IN"),
+                        "mode": "formal",
+                    },
+                    timeout=30.0,
+                )
+                response.raise_for_status()
+                out.append(response.json()["translated_text"])
         except Exception as exc:
             raise AdapterError(self.provider, f"translation failed: {exc}") from exc
 

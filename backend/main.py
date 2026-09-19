@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import logging
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -61,7 +62,17 @@ def create_app() -> FastAPI:
 
     adapters, adapter_warnings = build_adapters(settings)
 
+    @asynccontextmanager
+    async def lifespan(_app: FastAPI):
+        yield
+        # Release the pooled connections rather than leaving them to the
+        # runtime to reap.
+        from backend.adapters.http import aclose_shared_client
+
+        await aclose_shared_client()
+
     app = FastAPI(
+        lifespan=lifespan,
         title="Hrin Vidhi",
         version=VERSION,
         description=(

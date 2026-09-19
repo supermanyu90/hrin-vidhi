@@ -26,6 +26,7 @@ import tempfile
 from pathlib import Path
 
 from backend.adapters.base import AdapterError, TextToSpeech
+from backend.adapters.http import shared_client
 from backend.adapters.text import split_on_sentences
 from backend.adapters.wav import WavError, duration_seconds, join_wav
 from backend.config import FIXTURES_DIR, Settings
@@ -89,8 +90,9 @@ class MockTextToSpeech(TextToSpeech):
         # No fixture and no offline voice on this machine (any Linux host,
         # so every serverless deployment). Return the script with no audio
         # rather than a silent file: the client speaks it instead.
-        log.info("No offline voice available for %s; the client will speak the script",
-                 language.value)
+        log.info(
+            "No offline voice available for %s; the client will speak the script", language.value
+        )
         return SpeechAudio(
             language=language,
             text=text,
@@ -169,7 +171,6 @@ class SarvamTextToSpeech(TextToSpeech):
         self._key = settings.sarvam_api_key
 
     async def synthesize(self, text: str, language: Language) -> SpeechAudio:
-        import httpx
 
         # Bulbul caps the length of each input, so a full rights script is sent
         # as several pieces.
@@ -184,20 +185,21 @@ class SarvamTextToSpeech(TextToSpeech):
         # sentences — losing the spoken disclaimer §9 requires.
         pieces = split_on_sentences(text, self.max_chars)
         try:
-            async with httpx.AsyncClient(timeout=45.0) as client:
-                response = await client.post(
-                    self.endpoint,
-                    headers={"api-subscription-key": self._key},
-                    json={
-                        "inputs": pieces,
-                        "target_language_code": _SARVAM_CODES.get(language, "hi-IN"),
-                        "speaker": self.speaker,
-                        "pace": 0.9,
-                        "model": self.model,
-                    },
-                )
-                response.raise_for_status()
-                audios = response.json().get("audios") or []
+            client = await shared_client()
+            response = await client.post(
+                self.endpoint,
+                headers={"api-subscription-key": self._key},
+                json={
+                    "inputs": pieces,
+                    "target_language_code": _SARVAM_CODES.get(language, "hi-IN"),
+                    "speaker": self.speaker,
+                    "pace": 0.9,
+                    "model": self.model,
+                },
+                timeout=45.0,
+            )
+            response.raise_for_status()
+            audios = response.json().get("audios") or []
         except Exception as exc:
             raise AdapterError(self.provider, f"synthesis failed: {exc}") from exc
 
@@ -208,8 +210,9 @@ class SarvamTextToSpeech(TextToSpeech):
         except (WavError, ValueError) as exc:
             # A join we cannot do correctly must not become garbled audio in a
             # borrower's ear. Fall back to the first clip and mark it partial.
-            log.warning("Could not join %d Sarvam clips (%s); sending the first only",
-                        len(audios), exc)
+            log.warning(
+                "Could not join %d Sarvam clips (%s); sending the first only", len(audios), exc
+            )
             return SpeechAudio(
                 language=language,
                 text=text,

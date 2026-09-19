@@ -141,12 +141,6 @@ class _FakeClient:
     def __init__(self, *a, **k):
         pass
 
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, *a):
-        return False
-
     async def post(self, url, headers=None, json=None, **kw):
         import base64
 
@@ -157,9 +151,19 @@ class _FakeClient:
 
 @pytest.fixture
 def sarvam(monkeypatch):
-    import httpx
+    """Stub the pooled client, not httpx.AsyncClient.
 
-    monkeypatch.setattr(httpx, "AsyncClient", _FakeClient)
+    The adapters take a shared client now rather than opening one per call,
+    so patching the constructor intercepts nothing.
+    """
+    import backend.adapters.tts as tts_module
+
+    fake = _FakeClient()
+
+    async def _shared():
+        return fake
+
+    monkeypatch.setattr(tts_module, "shared_client", _shared)
     return SarvamTextToSpeech(Settings(sarvam_api_key="test-key", demo_mode=False))
 
 
@@ -194,13 +198,18 @@ def test_the_reported_duration_matches_the_audio(sarvam) -> None:
 
 
 def test_no_audio_back_is_an_error_not_a_silent_note(sarvam, monkeypatch) -> None:
-    import httpx
+    import backend.adapters.tts as tts_module
 
     class _Empty(_FakeClient):
         async def post(self, *a, **k):
             return _FakeResponse({"audios": []})
 
-    monkeypatch.setattr(httpx, "AsyncClient", _Empty)
+    empty = _Empty()
+
+    async def _shared():
+        return empty
+
+    monkeypatch.setattr(tts_module, "shared_client", _shared)
     with pytest.raises(AdapterError):
         asyncio.run(sarvam.synthesize("नमस्ते।", Language.HINDI))
 
@@ -342,3 +351,46 @@ def test_a_silent_recording_is_reported_not_analysed(monkeypatch) -> None:
     # language, and a failure is the worst moment to hand them English.
     assert detail["code"] == "errNoSpeech"
     assert "did not hear" in detail["message"]
+
+
+# ---------------------------------------------------------------------------
+# Connection reuse
+# ---------------------------------------------------------------------------
+
+
+def test_the_http_client_is_shared_between_calls() -> None:
+    """Every Sarvam call used to open a client and close it again, paying for
+    a TCP connection and a TLS handshake each time. Measured against the live
+    API: 727ms per call with a fresh client, 567ms reusing one, and a voice
+    note makes two of them."""
+    import asyncio
+
+    from backend.adapters.http import aclose_shared_client, shared_client
+
+    async def check():
+        first = await shared_client()
+        second = await shared_client()
+        assert first is second, "a new client per call defeats the pool"
+        await aclose_shared_client()
+
+    asyncio.run(check())
+
+
+def test_a_client_from_a_dead_event_loop_is_replaced() -> None:
+    """Tests call asyncio.run repeatedly and each run builds a new loop.
+    A client held from a previous one raises on use, so it is rebuilt."""
+    import asyncio
+
+    from backend.adapters.http import shared_client
+
+    first = asyncio.run(shared_client())
+    second = asyncio.run(shared_client())
+    assert first is not second, "the client outlived its event loop"
+
+
+def test_no_adapter_opens_its_own_client() -> None:
+    from backend.config import BACKEND_DIR
+
+    for name in ("stt.py", "translate.py", "tts.py"):
+        source = (BACKEND_DIR / "adapters" / name).read_text(encoding="utf-8")
+        assert "httpx.AsyncClient(" not in source, f"{name} bypasses the shared pool"

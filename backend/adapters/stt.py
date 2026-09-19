@@ -8,6 +8,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from backend.adapters.base import AdapterError, SpeechToText
+from backend.adapters.http import shared_client
 from backend.config import FIXTURES_DIR, Settings
 from backend.schemas import Language, Transcript
 
@@ -95,28 +96,27 @@ class SarvamSpeechToText(SpeechToText):
         *,
         mime_type: str = "audio/webm",
     ) -> Transcript:
-        import httpx  # imported lazily so DEMO_MODE needs no HTTP stack
 
         code = _SARVAM_CODES.get(language, "hi-IN")
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(
-                    self.endpoint,
-                    headers={"api-subscription-key": self._key},
-                    files={"file": ("audio.webm", audio, mime_type)},
-                    data={"language_code": code, "model": self.model},
+            client = await shared_client()
+            response = await client.post(
+                self.endpoint,
+                headers={"api-subscription-key": self._key},
+                files={"file": ("audio.webm", audio, mime_type)},
+                data={"language_code": code, "model": self.model},
+                timeout=30.0,
+            )
+            if response.status_code >= 400:
+                # The body names the cause — "Failed to read the file,
+                # please check the audio format" is what a WebM upload
+                # gets — and a bare status code hid that for a whole
+                # debugging session.
+                raise AdapterError(
+                    self.provider,
+                    f"transcription failed ({response.status_code}): {response.text[:300]}",
                 )
-                if response.status_code >= 400:
-                    # The body names the cause — "Failed to read the file,
-                    # please check the audio format" is what a WebM upload
-                    # gets — and a bare status code hid that for a whole
-                    # debugging session.
-                    raise AdapterError(
-                        self.provider,
-                        f"transcription failed ({response.status_code}): "
-                        f"{response.text[:300]}",
-                    )
-                payload = response.json()
+            payload = response.json()
         except AdapterError:
             raise
         except Exception as exc:
@@ -160,8 +160,6 @@ class BhashiniSpeechToText(SpeechToText):
     ) -> Transcript:
         import base64
 
-        import httpx
-
         payload = {
             "pipelineTasks": [
                 {"taskType": "asr", "config": {"language": {"sourceLanguage": language.value}}}
@@ -169,15 +167,16 @@ class BhashiniSpeechToText(SpeechToText):
             "inputData": {"audio": [{"audioContent": base64.b64encode(audio).decode()}]},
         }
         try:
-            async with httpx.AsyncClient(timeout=45.0) as client:
-                response = await client.post(
-                    self.endpoint,
-                    headers={"Authorization": self._key or "", "userID": self._user_id or ""},
-                    json=payload,
-                )
-                response.raise_for_status()
-                data = response.json()
-                text = data["pipelineResponse"][0]["output"][0]["source"]
+            client = await shared_client()
+            response = await client.post(
+                self.endpoint,
+                headers={"Authorization": self._key or "", "userID": self._user_id or ""},
+                json=payload,
+                timeout=45.0,
+            )
+            response.raise_for_status()
+            data = response.json()
+            text = data["pipelineResponse"][0]["output"][0]["source"]
         except Exception as exc:
             raise AdapterError(self.provider, f"transcription failed: {exc}") from exc
 
