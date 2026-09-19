@@ -10,6 +10,7 @@ Run it:  DEMO_MODE=true python -m backend.main
 from __future__ import annotations
 
 import logging
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,11 +28,26 @@ log = logging.getLogger(__name__)
 
 
 def asset_version() -> str:
-    """Build stamp for cache-busting: version plus the newest frontend mtime.
+    """Build stamp for cache-busting.
 
-    Recomputed per request so an edit during a demo is picked up without a
-    restart; the directory listing is a handful of stat calls.
+    The deployment's commit when there is one, otherwise the newest frontend
+    mtime so an edit during local development is picked up without a restart.
+
+    The mtime alone is not enough once deployed. Vercel normalises every file
+    timestamp to a fixed sentinel for reproducible builds — observed in
+    production as `?v=0.1.0-1540000000`, which is 20 October 2018 and is the
+    same on every deploy ever made. The stamp changed for nobody.
+
+    That was survivable rather than harmless: assets are served `no-cache`
+    with a content ETag, so browsers revalidate and do get new files. But the
+    stamp exists precisely so that updates propagate, and a mechanism that
+    quietly does nothing is worse than no mechanism — the day someone marks
+    these URLs `immutable`, which is the obvious optimisation for versioned
+    assets, every borrower freezes on the build they first loaded.
     """
+    commit = os.environ.get("VERCEL_GIT_COMMIT_SHA", "").strip()
+    if commit:
+        return f"{VERSION}-{commit[:12]}"
     try:
         newest = max(p.stat().st_mtime for p in FRONTEND_DIR.glob("*") if p.is_file())
     except (ValueError, OSError):

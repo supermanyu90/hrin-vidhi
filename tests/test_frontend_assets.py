@@ -268,3 +268,32 @@ def test_each_language_block_is_written_in_its_own_script(lang: str) -> None:
                 raise AssertionError(
                     f"{lang}.{key} contains {other} script: {value[:40]!r}"
                 )
+
+
+def test_the_asset_stamp_actually_changes_between_deployments(monkeypatch) -> None:
+    """The old stamp was inert in production and the test could not tell.
+
+    It was the newest frontend mtime, and Vercel normalises every file
+    timestamp to a fixed sentinel for reproducible builds. Production served
+    `?v=0.1.0-1540000000` — 20 October 2018 — identically on every deploy ever
+    made, while this suite happily confirmed that a stamp was present.
+    """
+    from backend.main import asset_version
+
+    monkeypatch.setenv("VERCEL_GIT_COMMIT_SHA", "1111111111111111111111")
+    first = asset_version()
+    monkeypatch.setenv("VERCEL_GIT_COMMIT_SHA", "2222222222222222222222")
+    second = asset_version()
+
+    assert first != second, "two different commits produced the same asset stamp"
+    assert "1540000000" not in first, "the frozen build sentinel is back"
+
+
+def test_the_stamp_falls_back_to_mtime_for_local_development(monkeypatch) -> None:
+    """No commit outside a deployment, and an edit must still bust the cache."""
+    from backend.main import VERSION, asset_version
+
+    monkeypatch.delenv("VERCEL_GIT_COMMIT_SHA", raising=False)
+    stamp = asset_version()
+    assert stamp.startswith(f"{VERSION}-")
+    assert stamp != VERSION

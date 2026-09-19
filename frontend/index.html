@@ -627,7 +627,7 @@ async function toggleRecording() {
   recorder.start();
   recording = true;
   micBtn.classList.add('recording');
-  micBtn.setAttribute('aria-label', 'Stop recording');
+  micBtn.setAttribute('aria-label', t(lang, 'labelStop'));
   setStatus(t(lang, 'recording'));
 }
 
@@ -635,7 +635,7 @@ function stopRecording() {
   recording = false;
   if (sherni) sherni.setState('reading');
   micBtn.classList.remove('recording');
-  micBtn.setAttribute('aria-label', 'Record');
+  micBtn.setAttribute('aria-label', t(lang, 'recordHint'));
   if (recorder && recorder.state !== 'inactive') recorder.stop();
 }
 
@@ -1245,6 +1245,7 @@ function buildLanguageSelect() {
     lang = select.value;
     try { localStorage.setItem('hv-lang', lang); } catch (err) { /* private mode */ }
     askInput.placeholder = t(lang, 'askPlaceholder');
+    applyAccessibleNames();
     setStatus(t(lang, 'recordHint'));
     bubble(escapeHtml(t(lang, 'greeting')));
   });
@@ -1315,6 +1316,27 @@ function sherniSay(key, state) {
   if (line) sherni.say(line);
 }
 
+/** Announce every control in the borrower's language.
+ *
+ * The accessibility tree read back "Erase", "Record", "Send a photo" and
+ * "What is answering right now" — all English, in an application whose
+ * premise is that the person cannot read English. A screen reader user here
+ * is disproportionately someone who cannot read the screen at all, so these
+ * were the labels that mattered most and the only ones never translated. */
+function applyAccessibleNames() {
+  const set = (id, key, alsoTitle) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.setAttribute('aria-label', t(lang, key));
+    if (alsoTitle) el.title = t(lang, key);
+  };
+  set('langSelect', 'labelLanguage');
+  set('eraseBtn', 'newSession', true);
+  set('attachBtn', 'labelAttach');
+  set('micBtn', 'recordHint');
+  set('modePill', 'labelMode', true);
+}
+
 async function showMode() {
   const pill = document.getElementById('modePill');
   try {
@@ -1360,6 +1382,7 @@ async function showMode() {
 
   buildLanguageSelect();
   askInput.placeholder = t(lang, 'askPlaceholder');
+  applyAccessibleNames();
 
   // She is named for a screen reader here because she carries state the
   // borrower can act on, unlike on the landing page where she is decoration.
