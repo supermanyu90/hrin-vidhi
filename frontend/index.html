@@ -27,6 +27,10 @@
   }
   .brand { flex: 1; min-width: 0; }
   .brand-title {
+    /* An h1, so the page has a heading to navigate by — it reads as the
+       page title anyway. Browser heading margins and sizing are reset;
+       nothing about the appearance changes. */
+    margin: 0;
     font-size: 16px; font-weight: var(--fw-medium); letter-spacing: -0.2px;
     display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
   }
@@ -39,7 +43,7 @@
     font-family: var(--ff-sans); font-size: 14px;
     background: var(--surface-container); color: var(--on-surface-default);
     border: 1px solid var(--stroke-default); border-radius: 999px;
-    padding: 7px 12px; cursor: pointer; outline: none; flex-shrink: 0;
+    padding: 7px 12px; cursor: pointer; flex-shrink: 0;
   }
   .icon-btn {
     background: transparent; border: none; cursor: pointer; flex-shrink: 0;
@@ -182,7 +186,7 @@
     flex: 1; min-width: 0; font-family: var(--ff-sans); font-size: 15px;
     background: var(--surface-container); color: var(--on-surface-default);
     border: 1px solid var(--stroke-default); border-radius: 999px;
-    padding: 11px 16px; outline: none;
+    padding: 11px 16px;
   }
   .composer input[type="text"]:focus { border-color: var(--primary); }
 
@@ -232,10 +236,15 @@
     border: 1px solid transparent; cursor: pointer; font-family: inherit;
   }
   .demo-pill:hover { border-color: var(--on-surface-de-emphasis); }
-  .demo-pill:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  /* One rule for the page rather than per component: the two that had their
+     own were the only ones a keyboard user could see. */
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
   /* Live inference is the state worth seeing across the room at a demo. */
   .demo-pill[data-mode="genai"] {
-    background: var(--primary-container); color: var(--primary);
+    /* --primary on --primary-container measured 3.02:1 at 11px, and text
+       this size needs 4.5. The badge reports whether real inference is
+       running, so it has to be legible rather than merely tinted. */
+    background: var(--primary-container); color: var(--on-primary-container, #0b3a7a);
     font-weight: 700;
   }
   .demo-pill[data-mode="genai"]::before { content: "● "; color: var(--tertiary); }
@@ -291,7 +300,6 @@
     border: 1px solid var(--primary); border-radius: 18px; cursor: pointer;
   }
   .choices button:hover { background: var(--primary-container); }
-  .choices button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
   .choices button[data-tone="quiet"] { color: var(--on-surface-de-emphasis); border-color: var(--stroke-default); }
 
   /* ---- Phone ----------------------------------------------------------
@@ -338,10 +346,10 @@
   <header>
     <div class="sherni-slot" id="sherniSlot"></div>
     <div class="brand">
-      <div class="brand-title">
+      <h1 class="brand-title">
         Hrin Vidhi <span class="devanagari">ऋण विधि</span>
         <button type="button" class="demo-pill" id="modePill" hidden aria-expanded="false" title="What is answering right now"></button>
-      </div>
+      </h1>
       <div class="brand-sub">Know what your loan really costs, and what they cannot do to you.</div>
     </div>
     <!-- autocomplete=off: without it Chrome restores a previously-chosen
@@ -1264,12 +1272,22 @@ async function ask(question) {
 // ---------------------------------------------------------------------
 
 async function showError(response) {
-  let detail = '';
+  let detail = '', code = '';
   try {
     const body = await response.json();
-    detail = typeof body.detail === 'string' ? body.detail : '';
+    if (body.detail && typeof body.detail === 'object') {
+      code = body.detail.code || '';
+      detail = body.detail.message || '';
+    } else if (typeof body.detail === 'string') {
+      detail = body.detail;
+    }
   } catch (err) { /* non-JSON error body */ }
-  setStatus(detail || t(lang, 'error'), true);
+
+  // A failure is the worst moment to switch to English. Where the server
+  // names the case, say it in the borrower's language; the server's own
+  // wording is the fallback for anything it has not named.
+  const localised = code && STRINGS[lang] && STRINGS[lang][code];
+  setStatus(localised || detail || t(lang, 'error'), true);
 }
 
 function buildLanguageSelect() {

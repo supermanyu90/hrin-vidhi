@@ -385,3 +385,24 @@ def test_english_answers_a_borrower_with_no_document() -> None:
     hits = get_retriever().search("I have no papers, what can I do?", 3)
     assert hits, "still refusing the question the button asks"
     assert hits[0].chunk.chunk_id == "rbi-dl-kfs-required", hits[0].chunk.chunk_id
+
+
+@pytest.mark.parametrize("code", ["errUnclear", "errNoSpeech"])
+def test_every_error_the_server_names_has_a_translation(code: str) -> None:
+    """The failure path was the last thing still in English.
+
+    showError() printed whatever the server sent, and those strings were
+    written in English — so a borrower whose recording failed was told why in
+    a language they may not read, at the one moment they most needed to.
+    """
+    strings = (FRONTEND_DIR / "i18n.js").read_text(encoding="utf-8")
+    assert strings.count(f"{code}:") == 6, f"{code} is missing in some language"
+
+
+def test_the_backend_names_its_failures_with_those_codes() -> None:
+    """The lookup only works if both halves agree on the code."""
+    from backend.config import BACKEND_DIR
+
+    routes = (BACKEND_DIR / "routes" / "intake.py").read_text(encoding="utf-8")
+    for code in ("errUnclear", "errNoSpeech"):
+        assert f'"code": "{code}"' in routes, code

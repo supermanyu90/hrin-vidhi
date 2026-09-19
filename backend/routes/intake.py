@@ -147,12 +147,19 @@ async def _transcribe(adapters, audio: bytes, language: Language, mime: str | No
         if not exc.recoverable:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
         log.warning("Speech-to-text failed (%s)", exc)
+        # A code as well as the words. The borrower reads this in the middle
+        # of a failure, which is the worst possible moment to hand them
+        # English — the interface looks the code up in their own language and
+        # falls back to this text only if it has none.
         raise HTTPException(
             status_code=502,
-            detail=(
-                "I could not make out that recording. Please try saying it again, "
-                "a little closer to the phone."
-            ),
+            detail={
+                "code": "errUnclear",
+                "message": (
+                    "I could not make out that recording. Please try saying it again, "
+                    "a little closer to the phone."
+                ),
+            },
         ) from exc
 
     if not transcript.native_text.strip():
@@ -160,10 +167,13 @@ async def _transcribe(adapters, audio: bytes, language: Language, mime: str | No
         # empty string that the rules engine then analyses as a silent person.
         raise HTTPException(
             status_code=422,
-            detail=(
-                "I did not hear anything in that recording. Please try again, "
-                "a little closer to the phone."
-            ),
+            detail={
+                "code": "errNoSpeech",
+                "message": (
+                    "I did not hear anything in that recording. Please try again, "
+                    "a little closer to the phone."
+                ),
+            },
         )
 
     # A provider that already returned English leaves nothing to translate.

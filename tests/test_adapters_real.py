@@ -337,4 +337,8 @@ def test_a_silent_recording_is_reported_not_analysed(monkeypatch) -> None:
         data={"language": "hi"},
     )
     assert response.status_code == 422
-    assert "did not hear" in response.json()["detail"]
+    detail = response.json()["detail"]
+    # A code as well as the words: the interface shows this in the borrower's
+    # language, and a failure is the worst moment to hand them English.
+    assert detail["code"] == "errNoSpeech"
+    assert "did not hear" in detail["message"]
