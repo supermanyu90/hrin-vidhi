@@ -98,6 +98,46 @@ def test_the_entrypoint_module_defines_app_at_the_top_level() -> None:
     )
 
 
+def test_pyproject_and_requirements_agree() -> None:
+    """Two files now list the runtime dependencies, so they must not drift.
+
+    Vercel installs from `pyproject.toml` (it switches to uv the moment that
+    file exists); people install from `requirements.txt`. A package added to
+    one and not the other means the deployed function differs from the one
+    anybody tested.
+    """
+    import re
+    import tomllib
+
+    declared = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text())
+    shipped = {
+        re.split(r"[=<>\[]", spec)[0].strip()
+        for spec in declared["project"]["dependencies"]
+    }
+
+    listed = {
+        re.split(r"[=<>\[]", line)[0].strip()
+        for line in (PROJECT_ROOT / "requirements.txt").read_text().splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    }
+
+    assert shipped == listed, (
+        f"only in pyproject: {sorted(shipped - listed)}; "
+        f"only in requirements.txt: {sorted(listed - shipped)}"
+    )
+
+
+def test_the_project_table_exists_for_uv() -> None:
+    """Its absence failed a build: uv refuses a pyproject without [project]."""
+    import tomllib
+
+    config = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text())
+    assert "project" in config
+    assert config["project"]["dependencies"]
+    # uv would otherwise try to build this application as a wheel.
+    assert config["tool"]["uv"]["package"] is False
+
+
 def test_deployment_config_ships_the_data_files() -> None:
     import json
 

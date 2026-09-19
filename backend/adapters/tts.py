@@ -126,7 +126,7 @@ class MockTextToSpeech(TextToSpeech):
                     stderr=asyncio.subprocess.PIPE,
                 )
                 _, stderr = await asyncio.wait_for(proc.communicate(), timeout=30.0)
-            except (asyncio.TimeoutError, OSError) as exc:
+            except (TimeoutError, OSError) as exc:
                 log.warning("macOS say failed for %s: %s", language.value, exc)
                 return None
             if proc.returncode != 0 or not out.is_file():

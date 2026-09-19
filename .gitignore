@@ -6,3 +6,6 @@ __pycache__/
 .ruff_cache/
 .vercel/
 fixtures/audio/*/
+# uv resolves its own lock on Vercel, with an older uv than most machines run.
+# A lock written by a newer uv can use a revision that one cannot read.
+uv.lock

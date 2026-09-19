@@ -159,7 +159,7 @@ async def with_timeout(coro, seconds: float, provider: str, what: str):
 
     try:
         return await asyncio.wait_for(coro, timeout=seconds)
-    except (TimeoutError, asyncio.TimeoutError) as exc:
+    except TimeoutError as exc:
         raise AdapterError(
             provider, f"{what} exceeded {seconds:g}s and was abandoned"
         ) from exc

@@ -1,10 +1,24 @@
-# Lint config. Selected rules are the ones that catch real defects; the two
-# ignores below are deliberate and explained at each site.
+# Lint config. Selected rules are the ones that catch real defects; every
+# ignore below is deliberate and explained.
 line-length = 100
+
+# Pinned, not inferred. Ruff otherwise reads `requires-python` from
+# pyproject.toml, so adding that file for the Vercel entrypoint silently
+# switched on a batch of 3.12 modernisation rules and changed what "lint
+# clean" meant. The floor is still 3.12 — this only makes it explicit.
+target-version = "py312"
 
 [lint]
 select = ["F", "E", "W", "B", "UP", "SIM", "BLE", "RUF100", "I"]
 ignore = [
   "E501",   # long lines: the corpus and phrasebook carry long prose strings
   "B008",   # FastAPI's Depends/File/Form/Body in defaults IS the framework idiom
+  # `class Language(str, Enum)` -> `StrEnum` is NOT a refactor: it changes what
+  # str() returns ("Language.HINDI" becomes "hi"), which reaches the API
+  # responses, the phrasebook lookups and the fixtures. Worth doing
+  # deliberately with the tests watched, never as a lint autofix.
+  "UP042",
+  # PEP 695 type parameters on the generic BM25 index. The Generic[ID] form
+  # works and is readable; rewriting it buys nothing here.
+  "UP046",
 ]

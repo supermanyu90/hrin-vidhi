@@ -1,14 +1,47 @@
-# Vercel deployment entrypoint.
+# Vercel builds from this file, so it carries both the entrypoint and the
+# runtime dependencies.
 #
-# Vercel detects this as a FastAPI project and looks for a top-level `app`
-# instance. Left to itself it inspects conventional filenames; this points it
-# straight at the real application instead.
-#
-# There used to be an `api/index.py` shim that imported `backend.main` and
-# re-exported `app`. It failed twice: Vercel's detector reads the entrypoint
-# statically, so a shim whose `app` came from an import — and later from
-# inside a try/except — was not recognised as a FastAPI instance, and the
-# build stopped with "does not define a top-level app". Naming the module
-# directly removes the indirection and the failure with it.
+# Adding it changed how the platform installs: with a pyproject present it
+# switches from requirements.txt to uv, which needs a [project] table and
+# fails the build without one. The runtime dependency list below is therefore
+# the one that actually ships, and a test keeps it identical to
+# requirements.txt so the two cannot drift.
+
+[project]
+name = "hrin-vidhi"
+version = "0.1.0"
+description = "Voice-first legal and debt-rights assistant for rural India"
+# Vercel resolves 3.12 when nothing asks otherwise. Stated rather than
+# inherited: every module is checked against this floor.
+requires-python = ">=3.12"
+
+# Exactly what the deployed function imports. Anything added here costs
+# cold-start time on every request — see requirements.txt for the reasoning
+# behind each entry.
+dependencies = [
+    "fastapi==0.141.1",
+    "pydantic==2.13.5",
+    "pydantic-settings==2.15.0",
+    "python-multipart==0.0.32",
+    "httpx==0.28.1",
+    "google-genai>=2.23",
+]
+
+[project.optional-dependencies]
+dev = [
+    "uvicorn[standard]==0.53.0",
+    "pytest==9.1.1",
+    "anyio==4.11.0",
+    "ruff",
+]
+
+[tool.uv]
+# An application, not a library: there is nothing here to build into a wheel,
+# and without this uv tries to and fails.
+package = false
+
+# Vercel detects this as a FastAPI project and reads the entrypoint
+# statically, looking for a top-level `app`. An `api/index.py` shim that
+# re-exported `app` from backend.main failed exactly that check twice.
 [tool.vercel]
 entrypoint = "backend.main:app"
