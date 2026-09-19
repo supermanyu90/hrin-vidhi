@@ -406,11 +406,17 @@ def search(
     return [(h.doc_id, sentences[h.doc_id], h.score, h.coverage) for h in hits]
 
 
-def chunks_for(key: str) -> list[CorpusChunk]:
-    """The corpus chunks backing a phrasebook sentence, in declared order."""
+@cache
+def _chunks_by_id() -> dict[str, CorpusChunk]:
+    """Validated once, then reused. The corpus cannot change at runtime."""
     chunks = load_chunks()
     _validate(chunks)
-    by_id = {c.chunk_id: c for c in chunks}
+    return {c.chunk_id: c for c in chunks}
+
+
+def chunks_for(key: str) -> list[CorpusChunk]:
+    """The corpus chunks backing a phrasebook sentence, in declared order."""
+    by_id = _chunks_by_id()
     return [by_id[chunk_id] for chunk_id in MESSAGE_TO_CHUNKS.get(key, ())]
 
 
@@ -446,3 +452,4 @@ def detect_language(text: str) -> Language:
 
 def reset_cache() -> None:
     _index_for.cache_clear()
+    _chunks_by_id.cache_clear()

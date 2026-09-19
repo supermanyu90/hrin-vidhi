@@ -312,7 +312,6 @@ def _merge_document(state: SessionState, parsed: ParsedDocument) -> SessionState
             loan=loan,
             notice=notice,
             debt=debt,
-            transcript_english=state.transcript.english_text if state.transcript else "",
             extra_notes=notes,
         )
     )

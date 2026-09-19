@@ -78,10 +78,13 @@ class RuleContext:
     loan: LoanFacts | None = None
     notice: NoticeFacts | None = None
     debt: DebtAnalysis | None = None
-    #: Facts the borrower stated in their voice note, in English. Rules use
-    #: this only to corroborate document evidence, never as the sole basis for
-    #: a violation — we cannot cite a transcript to a regulator.
-    transcript_english: str = ""
+    # A `transcript_english` field used to be carried here so that rules
+    # could corroborate document evidence with what the borrower said. No
+    # rule ever read it, and it was threaded through two routes and the
+    # public API to reach a dead end. Removed rather than left as plumbing
+    # for a feature that does not exist: wiring it up means deciding which
+    # spoken claims may support a legal finding, which is a legal judgment
+    # and not a refactor. Re-adding it costs four lines.
     extra_notes: list[str] = field(default_factory=list)
 
 

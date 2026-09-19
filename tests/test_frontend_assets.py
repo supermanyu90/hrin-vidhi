@@ -406,3 +406,38 @@ def test_the_backend_names_its_failures_with_those_codes() -> None:
     routes = (BACKEND_DIR / "routes" / "intake.py").read_text(encoding="utf-8")
     for code in ("errUnclear", "errNoSpeech"):
         assert f'"code": "{code}"' in routes, code
+
+
+def test_the_document_language_follows_the_borrower() -> None:
+    """It was hardcoded `lang="en"` and never changed.
+
+    A screen reader then pronounces Devanagari, Tamil and Telugu with an
+    English voice, which is unintelligible — on the one product whose whole
+    premise is the borrower's own language. WCAG 3.1.1.
+    """
+    html = (FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
+    assert html.count("document.documentElement.lang = lang") >= 2, (
+        "set at startup and again when the picker changes"
+    )
+
+
+def test_the_conversation_is_a_main_landmark() -> None:
+    """role="log" REPLACED main's implicit role, so there was no main
+    landmark to jump to. aria-live announces new messages without it."""
+    html = (FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
+    assert 'role="log"' not in html
+    assert '<main class="chat" id="chat" aria-live="polite"' in html
+
+
+def test_english_citations_are_marked_as_english() -> None:
+    """Source names stay in English inside a page in another language.
+    Marking the change lets a screen reader switch voice. WCAG 3.1.2."""
+    html = (FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
+    assert 'class="cite" lang="en"' in html
+
+
+@pytest.mark.parametrize("key", ["skipToChat", "labelConversation"])
+def test_navigation_aids_are_translated(key: str) -> None:
+    """A skip link reading English on a Hindi page is the same bug again."""
+    strings = (FRONTEND_DIR / "i18n.js").read_text(encoding="utf-8")
+    assert strings.count(f"{key}:") == 6

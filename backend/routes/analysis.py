@@ -32,7 +32,6 @@ router = APIRouter(tags=["analysis"])
 async def compliance(
     loan_facts: LoanFacts | None = Body(default=None),
     notice_facts: NoticeFacts | None = Body(default=None),
-    transcript_english: str = Body(default=""),
 ) -> ComplianceReport:
     """Deterministic rules + corpus citations over the extracted facts.
 
@@ -70,7 +69,6 @@ async def compliance(
             loan=loan_facts,
             notice=notice_facts,
             debt=debt,
-            transcript_english=transcript_english,
             extra_notes=notes,
         )
     )
