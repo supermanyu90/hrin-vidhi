@@ -20,7 +20,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
 
 python -m backend.main                      # → http://127.0.0.1:8000 (no keys needed)
-pytest -q                                   # 613 tests
+pytest -q                                   # 629 tests
 ```
 
 **No API keys. No network.** That is the point — see below.
@@ -302,6 +302,7 @@ anything is cited:
 |---|---|
 | `RAG_MIN_SCORE` | weak matches generally |
 | `RAG_MIN_COVERAGE` | one rare term carrying a whole answer — "night" in *"who won the cricket match last night"* scored well against the recovery-hours rule until this was added |
+| `RAG_RELATIVE_COVERAGE` | a decisive answer being padded with weaker ones — "what can I do without the paper" matched the steps at full coverage and two unrelated rights at half, close enough on score to survive the floor below |
 | `RAG_RELATIVE_FLOOR` | padding a borrower-facing answer with tangentially-related clauses |
 
 Below the gates it returns `grounded=false` and says it could not confirm, rather than letting
@@ -511,4 +512,4 @@ fails if any language loses its speech fallback.
 | 6 | F4 rights explainer (TTS) + F6 grievance drafter | done |
 | 7 | `docs/DEMO.md` — scripted 3-minute judge walkthrough | done |
 
-613 tests passing; the full flow completes in `DEMO_MODE` with no keys set.
+629 tests passing; the full flow completes in `DEMO_MODE` with no keys set.

@@ -119,6 +119,16 @@ class Settings(BaseSettings):
             "instead of padding it with weakly-related clauses."
         ),
     )
+    rag_relative_coverage: float = Field(
+        default=0.6,
+        description=(
+            "A chunk answering far less of the question than the best hit is dropped. "
+            "The score floor alone is not enough: a concept covering every term of the "
+            "question and one sharing a single word can land within a few hundredths of "
+            "each other, and the weaker one then pads the answer with material the "
+            "borrower did not ask about."
+        ),
+    )
     rag_top_k: int = 4
     embedding_model: str = "all-MiniLM-L6-v2"
 

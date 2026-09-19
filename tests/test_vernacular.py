@@ -313,3 +313,51 @@ def test_off_topic_english_is_still_refused() -> None:
     answer = asyncio.run(answer_question("Who won the cricket last night?"))
     assert not answer.grounded
     assert answer.answer == COULD_NOT_CONFIRM
+
+
+def test_a_borrower_with_no_document_gets_grounded_steps() -> None:
+    """The commonest reason there is no paper is that none was ever given.
+
+    That is the first thing the answer says, and it is a breach in itself —
+    so this concept has to be answerable, not a dead end.
+    """
+    answer = asyncio.run(answer_question("मेरे पास कागज़ नहीं है, अब क्या करूँ?", language=Language.HINDI))
+    assert answer.grounded
+    cited = {c.chunk_id for c in answer.citations}
+    for needed in (
+        "rbi-dl-kfs-required",  # you were owed the paper
+        "rbi-fpc-grievance-redressal",  # who to write to
+        "rbios-how-to-file",  # where it goes next
+    ):
+        assert needed in cited, f"{needed} missing from {sorted(cited)}"
+
+
+@pytest.mark.parametrize(
+    ("language", "question"),
+    [
+        (Language.HINDI, "मेरे पास कागज़ नहीं है, अब क्या करूँ?"),
+        (Language.MARATHI, "माझ्याकडे कागद नाही, आता काय करू?"),
+        (Language.BHOJPURI, "हमरा लगे कागज नइखे, अब का करीं?"),
+        (Language.TAMIL, "என்னிடம் காகிதம் இல்லை, இப்போது என்ன செய்வது?"),
+        (Language.TELUGU, "నా దగ్గర కాగితం లేదు, ఇప్పుడు ఏం చేయాలి?"),
+    ],
+)
+def test_the_steps_are_reachable_in_every_language(language: Language, question: str) -> None:
+    """Marathi missed this by a hundredth of a point on coverage: only the
+    word for "paper" matched, because the hints lacked the phrase people
+    actually use for "I don't have it"."""
+    from backend.analysis.vernacular import search as search_vernacular
+
+    hits = search_vernacular(question, language)
+    assert hits, f"{language.value} found nothing"
+    assert hits[0][0] == "no_document_steps", hits[0][0]
+
+
+def test_a_decisive_answer_is_not_padded_with_weaker_ones() -> None:
+    """A concept covering every term of the question and one sharing a single
+    word can land within a few hundredths on score. The score floor kept both,
+    and the borrower got two unrelated rights stapled to their answer."""
+    answer = asyncio.run(answer_question("कागज़ के बिना मैं क्या कर सकता हूँ?", language=Language.HINDI))
+    cited = {c.chunk_id for c in answer.citations}
+    for unrelated in ("rbi-dl-cooling-off", "ni-138-notice-and-time"):
+        assert unrelated not in cited, f"{unrelated} padded the answer"

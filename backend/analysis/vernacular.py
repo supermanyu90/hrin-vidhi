@@ -83,6 +83,19 @@ MESSAGE_TO_CHUNKS: dict[str, tuple[str, ...]] = {
     # -- who am I actually dealing with ----------------------------------
     "check_nbfc": ("rbi-fpc-nbfc-registration", "rbi-fpc-grievance-redressal"),
     "app_accountability": ("rbi-dl-lsp-accountability",),
+    # -- I was never given the paper -------------------------------------
+    #
+    # The commonest reason a borrower cannot show a document is that the
+    # lender never gave them one — which is itself the first item in the
+    # answer. Every step in this sentence is carried by a chunk below.
+    "no_document_steps": (
+        "rbi-dl-kfs-required",
+        "rbi-fpc-grievance-redressal",
+        "rbi-dl-lsp-accountability",
+        "rbi-fpc-nbfc-registration",
+        "rbios-when-eligible",
+        "rbios-how-to-file",
+    ),
     # -- what I can do about it ------------------------------------------
     "ombudsman_how": (
         "rbios-how-to-file",
@@ -273,6 +286,14 @@ _HINTS: dict[str, dict[str, str]] = {
         "ta": "என் உரிமைகள் என்ன உரிமை அறியும் உரிமை கேட்கும் உரிமை",
         "te": "నా హక్కులు ఏ హక్కులు తెలుసుకునే హక్కు వినిపించే హక్కు",
     },
+    "no_document_steps": {
+        "en": "no paper document copy lost never given what can I do steps agreement statement",
+        "hi": "कागज़ नहीं है मेरे पास कागज़ खो गया कभी नहीं दिया क्या करूँ कदम समझौता विवरण नक़ल",
+        "mr": "कागद नाही माझ्याकडे कागद हरवला कधीच दिला नाही काय करू पावले करारनामा विवरण प्रत",
+        "bho": "कागज नइखे हमरा लगे कागज खो गइल कबो ना दिहल का करीं कदम समझौता विवरण नकल",
+        "ta": "காகிதம் இல்லை என்னிடம் தொலைந்தது தரவில்லை என்ன செய்வது படிகள் ஒப்பந்தம் நகல்",
+        "te": "కాగితం లేదు నా దగ్గర పోయింది ఇవ్వలేదు ఏమి చేయాలి దశలు ఒప్పందం ప్రతి",
+    },
     "cooling_off": {
         "en": "return the loan give it back cancel exit early without penalty change my mind",
         "hi": "कर्ज़ वापस लौटाना रद्द करना बाहर निकलना बिना जुर्माने मन बदल गया",
@@ -367,12 +388,22 @@ def search(
     settings = get_settings()
     index, sentences = _index_for(language)
 
-    hits = index.search(tokenize_vernacular(question), top_k)
-    return [
-        (h.doc_id, sentences[h.doc_id], h.score, h.coverage)
-        for h in hits
+    hits = [
+        h
+        for h in index.search(tokenize_vernacular(question), top_k)
         if h.score >= settings.rag_min_score and h.coverage >= settings.rag_min_coverage
     ]
+    if not hits:
+        return []
+
+    # Drop anything answering far less of the question than the best hit.
+    # "What can I do without the paper" matched the steps at full coverage and
+    # two unrelated rights at half, closely enough in score to survive the
+    # score floor — and the answer then carried all three.
+    best_coverage = max(h.coverage for h in hits)
+    hits = [h for h in hits if h.coverage >= best_coverage * settings.rag_relative_coverage]
+
+    return [(h.doc_id, sentences[h.doc_id], h.score, h.coverage) for h in hits]
 
 
 def chunks_for(key: str) -> list[CorpusChunk]:

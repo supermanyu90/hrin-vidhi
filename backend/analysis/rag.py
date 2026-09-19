@@ -128,6 +128,13 @@ async def answer_question(
     top = strong[0].score
     strong = [h for h in strong if h.score >= top * settings.rag_relative_floor]
 
+    # And relative on coverage too: a chunk that answers a fraction of what
+    # the best one answers is padding, however close its score.
+    best_coverage = max(h.coverage for h in strong)
+    strong = [
+        h for h in strong if h.coverage >= best_coverage * settings.rag_relative_coverage
+    ]
+
     citations = [to_citation(h.chunk, score=h.score) for h in strong]
     draft = _compose(question, citations)
 

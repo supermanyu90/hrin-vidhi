@@ -716,8 +716,12 @@ function offerDocumentOrNot() {
  * not have to type to find out they cannot be arrested over a debt. */
 function continueWithoutDocument() {
   bubble(escapeHtml(t(lang, 'noPaperOk')));
+  // The steps come first: for someone with no document the most useful thing
+  // is not a rights lookup but what to do this week — and the first step is
+  // that they were owed the paper in the first place. It goes through the
+  // same grounded path as everything else, so it arrives with its citations.
   choices(
-    ['askExample1', 'askExample2', 'askExample3'].map(key => ({
+    ['askSteps', 'askExample1', 'askExample2', 'askExample3'].map(key => ({
       label: t(lang, key),
       echo: false,          // ask() posts the question itself
       onPick: () => ask(t(lang, key)),
