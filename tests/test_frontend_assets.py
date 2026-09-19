@@ -211,3 +211,18 @@ def test_the_landing_mascot_stays_silent() -> None:
     html = (FRONTEND_DIR / "home.html").read_text(encoding="utf-8")
     assert ".sherni-hero .sh-say { display: none; }" in html
     assert "mascotGreet" not in html, "the hero must not queue a line it will not show"
+
+
+def test_a_fixture_transcript_is_never_labelled_as_what_was_heard() -> None:
+    """The mock returns a complete, convincing borrower's story.
+
+    Shown under "this is what I heard" it is the application inventing a
+    person and then reasoning about their debt. The interface checks the
+    provider and labels the offline fixture as a sample instead.
+    """
+    html = (FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
+    assert "transcript.provider || ''" in html
+    assert "sampleNotice" in html
+
+    strings = (FRONTEND_DIR / "i18n.js").read_text(encoding="utf-8")
+    assert strings.count("sampleNotice") == 6, "every language needs the notice"

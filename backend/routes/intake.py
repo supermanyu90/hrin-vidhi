@@ -126,7 +126,19 @@ async def intake_voice(
 
 
 async def _transcribe(adapters, audio: bytes, language: Language, mime: str | None) -> Transcript:
-    """STT then translation, each degrading to its mock rather than failing."""
+    """Speech to text, then translation.
+
+    A failed transcription is NOT filled in from the fixture. The mock returns
+    a complete, plausible borrower's story — a man named Ramesh with a
+    two-wheeler loan — and the interface presents whatever comes back under
+    "this is what I heard". Substituting it for a real failure meant the app
+    putting invented words in the borrower's mouth and then reasoning about
+    their debt from them. For a tool whose entire discipline is refusing to
+    assert what it cannot support, that was the worst bug in it.
+
+    The fixture still serves the offline demo, where the mock IS the
+    configured adapter and the interface labels what it shows as a sample.
+    """
     try:
         transcript = await adapters.stt.transcribe(
             audio, language, mime_type=mime or "audio/webm"
@@ -134,10 +146,25 @@ async def _transcribe(adapters, audio: bytes, language: Language, mime: str | No
     except AdapterError as exc:
         if not exc.recoverable:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
-        log.warning("Speech-to-text failed (%s); falling back to the mock", exc)
-        from backend.adapters.stt import MockSpeechToText
+        log.warning("Speech-to-text failed (%s)", exc)
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "I could not make out that recording. Please try saying it again, "
+                "a little closer to the phone."
+            ),
+        ) from exc
 
-        transcript = await MockSpeechToText().transcribe(audio, language)
+    if not transcript.native_text.strip():
+        # A provider that heard nothing must say so rather than hand back an
+        # empty string that the rules engine then analyses as a silent person.
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "I did not hear anything in that recording. Please try again, "
+                "a little closer to the phone."
+            ),
+        )
 
     # A provider that already returned English leaves nothing to translate.
     if transcript.english_text.strip():

@@ -269,3 +269,72 @@ def test_a_pdf_passes_through_untouched() -> None:
 )
 def test_malformed_images_do_not_crash_the_upload(blob: bytes) -> None:
     assert isinstance(strip_image_metadata(blob), bytes)
+
+
+# ---------------------------------------------------------------------------
+# The transcript must be the borrower's own words, or nothing
+# ---------------------------------------------------------------------------
+
+
+def test_a_failed_transcription_does_not_invent_a_borrower(monkeypatch) -> None:
+    """The worst bug this project has had.
+
+    Sarvam rejected the browser's WebM with a 400, the route caught it and
+    fell back to MockSpeechToText, and the interface showed what came back
+    under "this is what I heard" — a detailed, convincing story about a man
+    named Ramesh Kumbhar with a two-wheeler loan. Every recording produced it.
+    The borrower was shown invented words as their own, and the rules engine
+    then reasoned about that fictional person's debt.
+
+    A failure must reach the borrower as a failure.
+    """
+    from fastapi.testclient import TestClient
+
+    from backend.adapters.base import AdapterError
+    from backend.main import app
+
+    async def always_fails(*args, **kwargs):
+        raise AdapterError("sarvam", "transcription failed (400): bad audio format")
+
+    client = TestClient(app)
+    monkeypatch.setattr(app.state.adapters.stt, "transcribe", always_fails)
+
+    response = client.post(
+        "/intake/voice",
+        files={"file": ("v.wav", b"RIFF0000WAVEfmt ", "audio/wav")},
+        data={"language": "hi"},
+    )
+    assert response.status_code >= 400, "a failed transcription must not read as success"
+    body = response.text
+    assert "Ramesh" not in body and "रमेश" not in body, (
+        "the fixture leaked into a real failure — this is the fabrication bug"
+    )
+
+
+def test_a_silent_recording_is_reported_not_analysed(monkeypatch) -> None:
+    """An empty transcript is not a borrower who said nothing worth noting."""
+    from fastapi.testclient import TestClient
+
+    from backend.main import app
+    from backend.schemas import Language, Transcript
+
+    async def heard_nothing(*args, **kwargs):
+        return Transcript(
+            language=Language.HINDI,
+            native_text="",
+            english_text="",
+            confidence=None,
+            duration_seconds=None,
+            provider="sarvam",
+        )
+
+    client = TestClient(app)
+    monkeypatch.setattr(app.state.adapters.stt, "transcribe", heard_nothing)
+
+    response = client.post(
+        "/intake/voice",
+        files={"file": ("v.wav", b"RIFF0000WAVEfmt ", "audio/wav")},
+        data={"language": "hi"},
+    )
+    assert response.status_code == 422
+    assert "did not hear" in response.json()["detail"]

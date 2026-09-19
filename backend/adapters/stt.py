@@ -28,6 +28,12 @@ class MockSpeechToText(SpeechToText):
 
     The audio bytes are accepted and discarded — the mock exists so the demo
     runs with no key and no network, not to pretend it heard anything.
+
+    It is reached ONLY when it is the configured adapter, never as a rescue
+    for a provider that failed. The story it returns is detailed and
+    convincing, which is what makes it useful offline and dangerous anywhere
+    else: shown under "this is what I heard", it is the application inventing
+    a borrower. The interface checks `provider` and labels this as a sample.
     """
 
     provider = "mock"
@@ -100,8 +106,19 @@ class SarvamSpeechToText(SpeechToText):
                     files={"file": ("audio.webm", audio, mime_type)},
                     data={"language_code": code, "model": self.model},
                 )
-                response.raise_for_status()
+                if response.status_code >= 400:
+                    # The body names the cause — "Failed to read the file,
+                    # please check the audio format" is what a WebM upload
+                    # gets — and a bare status code hid that for a whole
+                    # debugging session.
+                    raise AdapterError(
+                        self.provider,
+                        f"transcription failed ({response.status_code}): "
+                        f"{response.text[:300]}",
+                    )
                 payload = response.json()
+        except AdapterError:
+            raise
         except Exception as exc:
             raise AdapterError(self.provider, f"transcription failed: {exc}") from exc
 
