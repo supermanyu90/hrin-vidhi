@@ -135,11 +135,40 @@
   /* The hero band is --ink, so her outline flips to paper or she vanishes
      into it. Features stay dark: they sit on her marigold coat, not on the
      band. */
+  /* She does not speak on this page, at any width.
+     Her bubble is positioned relative to her, and she sits in a row that
+     wraps: above her is the subtitle, below her the button, and the bubble
+     landed on one or the other depending on where the row broke. Chasing a
+     breakpoint was treating the symptom.
+     It was redundant anyway — the line repeated the subtitle immediately
+     above it, in smaller type, and she is aria-hidden here because she is
+     decoration on this page. She speaks in the app, where what she says
+     tracks real state and is worth the room. */
+  .sherni-hero .sh-say { display: none; }
   .sherni-hero .sherni-svg {
     --sh-line: var(--paper); --sh-ink: #101A3D;
     --sh-mane: var(--marigold); --sh-coat: var(--paper-dim);
   }
-  @media (max-width: 520px) { .sherni-hero { width: 78px; flex-basis: 78px; } }
+  @media (max-width: 520px) {
+    .sherni-hero { width: 78px; flex-basis: 78px; }
+    /* She introduces the button, so she stays on its row rather than being
+       pushed onto a line of her own with the speech bubble stranded above. */
+    .cta-row { gap: 12px; }
+    .mic-cta { flex: 1 1 auto; justify-content: center; }
+    /* The reassurance reads as a caption under the button, not a column
+       beside it, once there is no room for two columns. */
+    .reassure { flex: 1 1 100%; }
+
+    .sherni-hero { width: 64px; flex-basis: 64px; }
+  }
+
+  /* Footer and inline links were 22px tall. Under a thumb that is a miss,
+     not a tap. Width-based as well as pointer-based: a phone is the common
+     case here, and `pointer: coarse` does not fire in every test harness. */
+  @media (pointer: coarse), (max-width: 620px) {
+    .foot-links a, a.see-math, #seeMath { padding: 11px 0; display: inline-block; }
+    .foot-links { gap: 10px 18px; }
+  }
   .mic-cta {
     display: inline-flex; align-items: center; gap: 18px;
     background: var(--marigold); color: var(--ink);
@@ -661,10 +690,8 @@ function paint() {
   [...$('langs').children].forEach(b =>
     b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
 
-  // Her invitation follows the language the borrower just chose.
-  if (heroMascot && typeof STRINGS !== 'undefined' && STRINGS[lang]) {
-    heroMascot.say(STRINGS[lang].mascotGreet, 9000);
-  }
+  // Nothing to say here: see the .sherni-hero .sh-say note in the styles.
+  // The headline, the subtitle and the button already make the invitation.
 }
 
 let heroMascot = null;

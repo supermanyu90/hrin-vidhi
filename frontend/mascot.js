@@ -177,20 +177,29 @@ const MASCOT_CSS = `
 
 /* ---- speech ---------------------------------------------------------- */
 .sh-say {
+  /* --sh-shift nudges the bubble back inside the viewport on a narrow screen,
+     and --sh-arrow keeps the tail pointing at her while it does. Centring on
+     the mascot alone put half the bubble off the left edge of a 360px phone,
+     with the text cut mid-word. */
+  --sh-shift: 0px;
+  --sh-arrow: 50%;
   position: absolute; left: 50%; bottom: calc(100% - 6px);
-  transform: translateX(-50%);
+  transform: translateX(calc(-50% + var(--sh-shift)));
   background: var(--sh-ink, #101A3D); color: #F7F3E8;
   padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.45;
-  max-width: 260px; width: max-content; text-align: center;
+  max-width: min(260px, calc(100vw - 24px)); width: max-content; text-align: center;
   opacity: 0; transition: opacity .3s ease, transform .3s ease;
   pointer-events: none;
 }
 .sh-say::after {
-  content: ""; position: absolute; top: 100%; left: 50%;
+  content: ""; position: absolute; top: 100%; left: var(--sh-arrow);
   transform: translateX(-50%);
   border: 8px solid transparent; border-top-color: var(--sh-ink, #101A3D);
 }
-.sh-say[data-show="1"] { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+.sh-say[data-show="1"] {
+  opacity: 1;
+  transform: translateX(calc(-50% + var(--sh-shift))) translateY(-4px);
+}
 
 /* Below her instead, for when she sits at the top of the page: in the chat
    header there is no room above, and the bubble rendered off-screen — every
@@ -198,10 +207,12 @@ const MASCOT_CSS = `
    page, so wherever she is placed the speech follows. */
 .sh-say[data-place="below"] { bottom: auto; top: calc(100% - 6px); }
 .sh-say[data-place="below"]::after {
-  top: auto; bottom: 100%;
+  top: auto; bottom: 100%; left: var(--sh-arrow);
   border-top-color: transparent; border-bottom-color: var(--sh-ink, #101A3D);
 }
-.sh-say[data-place="below"][data-show="1"] { transform: translateX(-50%) translateY(4px); }
+.sh-say[data-place="below"][data-show="1"] {
+  transform: translateX(calc(-50% + var(--sh-shift))) translateY(4px);
+}
 
 /* A tool people use while frightened should not also make them motion-sick.
    Each pose still reads; only the movement between them goes. */
@@ -268,9 +279,28 @@ function createMascot(host, { state = "waiting", label = "" } = {}) {
       if (!text) { bubble.dataset.show = "0"; bubble.textContent = ""; return api; }
       bubble.textContent = text;
       // Measure before showing: above by default, below when it would clip.
+      bubble.style.setProperty("--sh-shift", "0px");
+      bubble.style.setProperty("--sh-arrow", "50%");
       bubble.dataset.place = "above";
       bubble.dataset.show = "1";
       if (bubble.getBoundingClientRect().top < 8) bubble.dataset.place = "below";
+
+      // Then pull it back inside the screen if it hangs off either edge, and
+      // move the tail by the same amount so it still points at her.
+      const margin = 8;
+      const box = bubble.getBoundingClientRect();
+      let shift = 0;
+      if (box.left < margin) shift = margin - box.left;
+      else if (box.right > window.innerWidth - margin) {
+        shift = window.innerWidth - margin - box.right;
+      }
+      if (shift) {
+        bubble.style.setProperty("--sh-shift", `${Math.round(shift)}px`);
+        // The tail is centred on the bubble; undo the shift to keep it on her.
+        const half = box.width / 2;
+        const arrow = Math.min(Math.max(half - shift, 14), box.width - 14);
+        bubble.style.setProperty("--sh-arrow", `${Math.round(arrow)}px`);
+      }
       if (ms > 0) hideTimer = setTimeout(() => { bubble.dataset.show = "0"; }, ms);
       return api;
     },

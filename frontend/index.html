@@ -225,7 +225,6 @@
   .status-line.error { color: var(--negative); }
 
   .sherni-slot { width: 52px; flex: 0 0 52px; margin-right: 2px; }
-  @media (max-width: 420px) { .sherni-slot { width: 40px; flex-basis: 40px; } }
   .demo-pill {
     font-size: 10.5px; letter-spacing: 0.3px; text-transform: uppercase;
     background: var(--surface-container-high); color: var(--on-surface-de-emphasis);
@@ -261,6 +260,42 @@
   .mode-row .st.live { color: var(--tertiary); }
   .mode-row .st.fallback, .mode-row .st.forced { color: var(--on-surface-de-emphasis); }
   .mode-row .why { grid-column: 1 / -1; color: var(--on-surface-de-emphasis); font-size: 11px; }
+  /* ---- Phone ----------------------------------------------------------
+     This audience is mobile-first in the literal sense: most will never see
+     this on anything else, often on a 360px budget Android. Two things drive
+     the rules below — every control has to be hittable with a thumb, and the
+     header must not crowd out the conversation, which is the actual product. */
+  /* Width OR touch: a 768px tablet is still a thumb, and the controls
+     were 22-37px there because the rules keyed on width alone. */
+  @media (max-width: 460px), (pointer: coarse) {
+    .sherni-slot { width: 40px; flex-basis: 40px; }
+
+    header { gap: 8px; padding: 10px 12px; padding-top: calc(10px + env(safe-area-inset-top, 0px)); }
+    /* The tagline repeats what the opening message says at length, and it was
+       being truncated mid-word to make room for the controls. */
+    .brand-sub { display: none; }
+    .brand-title { font-size: 15px; gap: 6px; }
+    .brand-title .devanagari { font-size: 14px; }
+
+    /* 44px of tappable height without making the controls look oversized:
+       the visual size stays, the hit area grows around it. */
+    .lang-select { padding: 11px 10px; font-size: 15px; }
+    .icon-btn { padding: 12px; font-size: 20px; }
+    /* Small badge, but it opens the capability breakdown, so it needs a
+       real tap area rather than a 20px sliver. */
+    .demo-pill { padding: 12px; }
+
+    /* The composer is the one row a borrower touches every time. */
+    .composer { padding: 10px 12px; gap: 8px; }
+    #askInput { font-size: 16px; }   /* below 16px iOS zooms the whole page in */
+  }
+
+  @media (max-width: 340px) {
+    /* Very small and older handsets: drop the second wordmark rather than
+       let the row wrap into two lines of chrome. */
+    .brand-title .devanagari { display: none; }
+  }
+
 </style>
 </head>
 <body>

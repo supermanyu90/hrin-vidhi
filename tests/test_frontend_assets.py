@@ -151,3 +151,63 @@ def test_the_chat_links_to_the_templated_visualizer() -> None:
     """A link to the raw static file would carry an unreplaced token."""
     html = (FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
     assert "/visualizer?$" in html
+
+
+# ---------------------------------------------------------------------------
+# Phone layout
+# ---------------------------------------------------------------------------
+#
+# Nearly everyone who uses this will only ever see it on a phone, often a
+# 360px budget Android. These assert the few things that are checkable from
+# the source; the layout itself was verified by measuring both pages at 320,
+# 360, 414 and 768 with no element crossing either edge.
+
+PAGES = ("index.html", "home.html")
+
+
+@pytest.mark.parametrize("page", PAGES)
+def test_every_page_declares_a_device_width_viewport(page: str) -> None:
+    """Without this a phone renders at ~980px and scales the whole page down."""
+    html = (FRONTEND_DIR / page).read_text(encoding="utf-8")
+    assert "width=device-width" in html
+    # The layout pads for the notch; that padding only applies with this set.
+    assert "viewport-fit=cover" in html
+
+
+@pytest.mark.parametrize("page", PAGES)
+def test_every_page_has_a_phone_breakpoint(page: str) -> None:
+    html = (FRONTEND_DIR / page).read_text(encoding="utf-8")
+    assert "max-width: 460px" in html or "max-width: 520px" in html, (
+        f"{page} has no phone-width rules"
+    )
+
+
+def test_the_chat_input_cannot_trigger_ios_zoom() -> None:
+    """Safari zooms the whole page in when a focused input is under 16px,
+    and the borrower then has to pinch back out to see what they typed."""
+    html = (FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
+    assert "#askInput { font-size: 16px; }" in html
+
+
+def test_phone_rules_come_after_the_rules_they_override() -> None:
+    """Same specificity means source order decides.
+
+    The phone block sat above the base styles and was silently overridden by
+    them: the mode pill kept a 3px padding and a 22px tap height while the
+    media query said otherwise.
+    """
+    html = (FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
+    base = html.index("  .demo-pill {")
+    phone = html.index("@media (max-width: 460px)")
+    assert phone > base, (
+        "the phone media block must come after the base rules it overrides"
+    )
+
+
+def test_the_landing_mascot_stays_silent() -> None:
+    """Her bubble is positioned against her, and she sits in a row that wraps,
+    so it landed on the subtitle above or the button below depending on where
+    the row broke. It repeated that subtitle anyway."""
+    html = (FRONTEND_DIR / "home.html").read_text(encoding="utf-8")
+    assert ".sherni-hero .sh-say { display: none; }" in html
+    assert "mascotGreet" not in html, "the hero must not queue a line it will not show"
