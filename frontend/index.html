@@ -260,6 +260,26 @@
   .mode-row .st.live { color: var(--tertiary); }
   .mode-row .st.fallback, .mode-row .st.forced { color: var(--on-surface-de-emphasis); }
   .mode-row .why { grid-column: 1 / -1; color: var(--on-surface-de-emphasis); font-size: 11px; }
+  /* A numbered card for an answer that is a sequence of actions rather than
+     a statement of a rule. Five steps ran together as one paragraph read as
+     a wall on a phone; numbered, the borrower can see how many there are and
+     come back to the one they are on. */
+  .steps { margin: 0; padding: 0; list-style: none; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative;
+    padding: 0 0 0 34px; margin-top: 14px; line-height: 1.55;
+  }
+  .steps li:first-child { margin-top: 10px; }
+  .steps li::before {
+    content: counter(step);
+    position: absolute; left: 0; top: 1px;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--primary-container); color: var(--primary);
+    font-size: 13px; font-weight: var(--fw-medium);
+    display: flex; align-items: center; justify-content: center;
+    font-variant-numeric: tabular-nums;
+  }
+
   /* Tappable replies. This audience should never have to type to move
      forward, and the old flow asked for a document with no way to say "I do
      not have one" — the borrower was simply stuck. */
@@ -1192,6 +1212,28 @@ function downloadLetter(letter) {
 // F3 — free-form questions
 // ---------------------------------------------------------------------
 
+/** An answer is either a statement or a sequence. Render each as itself.
+ *
+ * A grounded answer arrives as one line unless the phrasebook entry wrote it
+ * as a lead plus steps, which is how "what can I do without the paper" is
+ * stored. The English composer also emits several lines, but its lines are
+ * quoted extracts prefixed with "- ", so they are excluded here and keep
+ * their existing shape.
+ */
+function renderAnswer(answer) {
+  const lines = String(answer || '').split('\n').map(l => l.trim()).filter(Boolean);
+  const isSequence =
+    lines.length >= 4 && !lines.some(l => l.startsWith('-') || l.startsWith('('));
+
+  if (!isSequence) {
+    return `<div>${escapeHtml(answer).replace(/\n/g, '<br>')}</div>`;
+  }
+
+  const [lead, ...steps] = lines;
+  return `<div>${escapeHtml(lead)}</div>` +
+         `<ol class="steps">${steps.map(s => `<li>${escapeHtml(s)}</li>`).join('')}</ol>`;
+}
+
 async function ask(question) {
   bubble(escapeHtml(question), 'user');
   askInput.value = '';
@@ -1210,9 +1252,7 @@ async function ask(question) {
     const body = await response.json();
     const citations = (body.citations || []).map(c =>
       `<div class="cite">${escapeHtml(c.source)} — ${escapeHtml(c.citation)}</div>`).join('');
-    bubble(
-      `<div>${escapeHtml(body.answer).replace(/\n/g, '<br>')}</div>${citations}`
-    );
+    bubble(`${renderAnswer(body.answer)}${citations}`);
   } catch (err) {
     typing.remove();
     setStatus(t(lang, 'error'), true);

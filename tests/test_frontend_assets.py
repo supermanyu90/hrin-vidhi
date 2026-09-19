@@ -332,3 +332,56 @@ def test_hero_lines_are_things_the_corpus_can_actually_answer() -> None:
         "no_arrest", "hidden_charges",
     ):
         assert concept in MESSAGE_TO_CHUNKS, concept
+
+
+def test_a_sequence_answer_renders_as_a_numbered_card() -> None:
+    """Five steps as one paragraph is a wall on a phone.
+
+    The phrasebook writes this concept as a lead line plus one line per step,
+    so the interface can number them. The English composer also emits several
+    lines, but its lines are quoted extracts prefixed with "- " and must keep
+    their existing shape — the renderer excludes them.
+    """
+    html = (FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
+    assert "function renderAnswer(" in html
+    assert 'ol class="steps"' in html
+    assert "startsWith('-')" in html, "bullet extracts must be excluded"
+
+
+def test_the_steps_concept_is_stored_one_line_per_step() -> None:
+    """The numbering is the interface's job, so the text carries no ordinals.
+
+    It is safe to shape it this way because the concept is only ever reached
+    through /ask — it is not in MESSAGE_ORDER, so it never enters the spoken
+    rights script where the ordinals would have helped.
+    """
+    import json
+
+    from backend.config import BACKEND_DIR
+    from backend.explainer.script import MESSAGE_ORDER
+
+    assert "no_document_steps" not in MESSAGE_ORDER
+
+    book = json.loads((BACKEND_DIR / "explainer" / "phrasebook.json").read_text(encoding="utf-8"))
+    entry = book["no_document_steps"]
+    counts = set()
+    for lang, text in entry.items():
+        lines = [line for line in text.split("\n") if line.strip()]
+        assert len(lines) >= 5, f"{lang} lost its steps"
+        counts.add(len(lines))
+    assert len(counts) == 1, f"languages disagree on step count: {counts}"
+
+
+def test_english_answers_a_borrower_with_no_document() -> None:
+    """It used to refuse this outright, and answer the button's own phrasing
+    with cooling-off and credit-limit rules that merely shared words.
+
+    Fixed in retrieval rather than by routing English through the phrasebook:
+    that would have traded away the guarantee that every English sentence is
+    traceable to the chunk it was taken from.
+    """
+    from backend.analysis.retriever import get_retriever
+
+    hits = get_retriever().search("I have no papers, what can I do?", 3)
+    assert hits, "still refusing the question the button asks"
+    assert hits[0].chunk.chunk_id == "rbi-dl-kfs-required", hits[0].chunk.chunk_id
